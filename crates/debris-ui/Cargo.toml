@@ -1,0 +1,11 @@
+[package]
+name = "debris-ui"
+description = "The GPUI surface: theme tokens, the SVG icon set, components, and views."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[dependencies]
+debris-core.workspace = true
+gpui.workspace = true

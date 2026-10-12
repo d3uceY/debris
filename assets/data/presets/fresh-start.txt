@@ -1,0 +1,47 @@
+# Fresh Start — the preinstalled apps a clean Windows machine ships with.
+#
+# Ported from Bloatbox's Fresh Start preset (MIT). Uncomment a line to include it;
+# nothing here is applied until you load the preset and confirm the removal.
+
+# --- preinstalled Microsoft apps ----------------------------------------------
+4DF9E0F8.Netflix
+Microsoft.549981C3F5F10
+Microsoft.BingNews
+Microsoft.BingWeather
+Microsoft.Getstarted
+Microsoft.Microsoft3DViewer
+Microsoft.MicrosoftOfficeHub
+Microsoft.MicrosoftSolitaireCollection
+Microsoft.MixedReality.Portal
+Microsoft.MSPaint
+Microsoft.Office.OneNote
+Microsoft.OneConnect
+Microsoft.People
+Microsoft.Print3D
+Microsoft.SkypeApp
+Microsoft.Windows.Photos
+Microsoft.WindowsAlarms
+Microsoft.WindowsCamera
+Microsoft.WindowsFeedbackHub
+Microsoft.WindowsMaps
+Microsoft.WindowsSoundRecorder
+Microsoft.YourPhone
+Microsoft.ZuneMusic
+Microsoft.ZuneVideo
+Microsoft.MicrosoftStickyNotes
+SpotifyAB.SpotifyMusic
+
+# --- Xbox stack ---------------------------------------------------------------
+Microsoft.Xbox.TCUI
+Microsoft.XboxApp
+Microsoft.XboxGameOverlay
+Microsoft.XboxGamingOverlay
+Microsoft.XboxSpeechToTextOverlay
+
+# --- OEM bundles that are not Microsoft's -------------------------------------
+E046963F.LenovoCompanion
+LenovoCorporation.LenovoID
+LenovoCorporation.LenovoSettings
+king.com.CandyCrushSaga
+king.com.CandyCrushFriends
+king.com.FarmHeroesSaga

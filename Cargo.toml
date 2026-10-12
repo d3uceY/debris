@@ -1,13 +1,22 @@
-[package]
-name = "debris"
+[workspace]
+resolver = "3"
+members = ["crates/*"]
+
+[workspace.package]
 version = "0.1.0"
 edition = "2024"
 license = "Apache-2.0"
+authors = ["d3uceY <onyekwelujesse1234@gmail.com>"]
 
-[dependencies]
+[workspace.dependencies]
+# GPUI ships from the Zed repository, not crates.io. Both crates must resolve to
+# one revision or you get confusing type mismatches.
 gpui = { git = "https://github.com/zed-industries/zed" }
 gpui_platform = { git = "https://github.com/zed-industries/zed" }
-# smallvec is included here for convenience, it is used by gpui when creating
-# components that can have children. uncomment this line or
-# use `cargo add smallvec` to add it to your project
-#smallvec = "1.13.2"
+
+# GPUI's `AssetSource::load` returns `anyhow::Result`, so the app cannot avoid it.
+anyhow = "1"
+
+debris-core = { path = "crates/debris-core" }
+debris-backend = { path = "crates/debris-backend" }
+debris-ui = { path = "crates/debris-ui" }

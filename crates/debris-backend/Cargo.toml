@@ -1,0 +1,10 @@
+[package]
+name = "debris-backend"
+description = "The PowerShell boundary: discovery, execution, and the script library."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[dependencies]
+debris-core.workspace = true
