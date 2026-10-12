@@ -59,7 +59,7 @@ impl Root {
         let presets = layout.presets();
 
         let theme = Theme::light();
-        let mut snapshot = Snapshot::default();
+        let mut snapshot = Snapshot::new();
         snapshot.scripts = Arc::new(scripts.clone());
         snapshot.presets = Arc::new(presets.clone());
         snapshot.dry_run = true;
@@ -368,8 +368,7 @@ impl DebrisApp for Root {
                             .combined()
                             .lines()
                             .map(str::trim)
-                            .filter(|line| !line.is_empty())
-                            .next_back()
+                            .rfind(|line| !line.is_empty())
                             .unwrap_or("finished")
                             .to_string();
                         Status::Info(format!("{finished_title}: {last}"))
@@ -417,8 +416,13 @@ impl DebrisApp for Root {
         self.sync(cx);
     }
 
-    fn dismiss_status(&mut self, cx: &mut Context<Self>) {
-        self.snapshot.status = Status::Idle;
+    fn toggle_sidebar(&mut self, cx: &mut Context<Self>) {
+        self.snapshot.sidebar_open = !self.snapshot.sidebar_open;
+        cx.notify();
+    }
+
+    fn toggle_inspector(&mut self, cx: &mut Context<Self>) {
+        self.snapshot.inspector_open = !self.snapshot.inspector_open;
         cx.notify();
     }
 

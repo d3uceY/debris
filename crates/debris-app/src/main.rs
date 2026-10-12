@@ -26,7 +26,7 @@ fn main() {
             // Light is the default; see DESIGN.md for why the scene picks it.
             cx.set_global(Theme::light());
 
-            let bounds = Bounds::centered(None, size(px(1180.0), px(760.0)), cx);
+            let bounds = Bounds::centered(None, size(px(1320.0), px(860.0)), cx);
             cx.open_window(
                 WindowOptions {
                     window_bounds: Some(WindowBounds::Windowed(bounds)),
