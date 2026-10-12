@@ -46,17 +46,6 @@ impl AppxPackage {
             .unwrap_or(&self.publisher);
         after_cn.split(',').next().unwrap_or(after_cn).trim()
     }
-
-    /// The line the UI shows under the name. Built here, not in the view, so the
-    /// backend and the UI can never disagree about it.
-    pub fn meta_line(&self) -> String {
-        match (self.publisher_short(), self.version.is_empty()) {
-            ("", true) => String::new(),
-            ("", false) => self.version.clone(),
-            (publisher, true) => publisher.to_string(),
-            (publisher, false) => format!("{publisher}  ·  {version}", version = self.version),
-        }
-    }
 }
 
 impl Default for AppxPackage {

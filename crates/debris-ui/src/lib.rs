@@ -35,7 +35,7 @@ pub use views::DebrisApp;
 /// layout.
 pub mod prelude {
     pub use crate::components::button::{Button, Variant, button};
-    pub use crate::components::{Tone, chip, eyebrow, kbd, metric};
+    pub use crate::components::{Tone, chip, eyebrow, kbd};
     pub use crate::icons::{Icon, icon};
     pub use crate::snapshot::{Screen, Snapshot, Status, StatusTone};
     pub use crate::theme::{Appearance, Theme, ThemeExt, metrics, radius, space, text, veil};

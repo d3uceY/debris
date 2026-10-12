@@ -29,8 +29,6 @@ pub mod space {
     pub const MD: f32 = 12.0;
     pub const LG: f32 = 16.0;
     pub const XL: f32 = 24.0;
-    pub const XXL: f32 = 32.0;
-    pub const XXXL: f32 = 48.0;
 }
 
 /// Fixed sizes: desktop at fixed DPI wants fixed steps, not a fluid scale.
@@ -42,9 +40,6 @@ pub mod text {
     pub const SMALL: f32 = 12.0;
     pub const BODY: f32 = 13.0;
     pub const SUBTITLE: f32 = 14.0;
-    pub const TITLE: f32 = 15.0;
-    pub const HEADING: f32 = 18.0;
-    pub const DISPLAY: f32 = 24.0;
 }
 
 /// One radius scale, so a chip, a control, a panel, and a rail button are
@@ -54,8 +49,6 @@ pub mod radius {
     pub const CHIP: f32 = 5.0;
     /// Buttons, inputs, panels.
     pub const CONTROL: f32 = 6.0;
-    /// The floating command shell and tooltips.
-    pub const FLOATING: f32 = 8.0;
     /// Icon-rail buttons.
     pub const RAIL: f32 = 8.0;
     /// The icon tile in an empty state.
@@ -115,8 +108,6 @@ pub mod veil {
     pub const HAIRLINE: f32 = 0.72;
     /// A table's row rule. Softer still, because there are many of them.
     pub const ROW_RULE: f32 = 0.55;
-    /// An icon's stroke when it is decoration rather than a control.
-    pub const ICON: f32 = 0.9;
 }
 
 #[derive(Clone, Debug)]
@@ -158,8 +149,6 @@ pub struct Theme {
 
     /// The ordinary hover fill, for rows and quiet buttons.
     pub muted: Rgba,
-    /// Text on `muted` when it is being used as a solid chip.
-    pub muted_foreground_solid: Rgba,
 
     /// The one primary action on a screen.
     pub primary: Rgba,
@@ -167,7 +156,6 @@ pub struct Theme {
     pub primary_hover: Rgba,
     /// A neutral selected/hovered fill one step stronger than `muted`.
     pub accent: Rgba,
-    pub accent_foreground: Rgba,
 
     /// Removal, as text and as a border. Nothing else is red.
     pub danger: Rgba,
@@ -219,13 +207,11 @@ impl Theme {
             input: rgb(0xD4D4D4),
 
             muted: rgb(0xF5F5F5),
-            muted_foreground_solid: rgb(0x171717),
 
             primary: rgb(0x171717),
             primary_foreground: rgb(0xFAFAFA),
             primary_hover: rgb(0x404040),
             accent: rgb(0xE5E5E5),
-            accent_foreground: rgb(0x171717),
 
             danger: rgb(0xDC2626),
             danger_solid: rgb(0xDC2626),
@@ -265,13 +251,11 @@ impl Theme {
             input: rgb(0x2F2F2F),
 
             muted: rgb(0x262626),
-            muted_foreground_solid: rgb(0xFAFAFA),
 
             primary: rgb(0xFAFAFA),
             primary_foreground: rgb(0x171717),
             primary_hover: rgb(0xD4D4D4),
             accent: rgb(0x333333),
-            accent_foreground: rgb(0xFAFAFA),
 
             danger: rgb(0xF87171),
             danger_solid: rgb(0xDC2626),

@@ -6,8 +6,7 @@ use std::path::{Path, PathBuf};
 /// The format is deliberately the plainest thing that works: one package name per
 /// line, `#` for comments, blank lines ignored. Bloatbox used an XML
 /// `<Config><Bloatware><string>` document for this; a diffable text file is a
-/// better citizen in a repository and needs no parser. `scripts/presets/`
-/// carries the converter for importing the old format.
+/// better citizen in a repository and needs no parser.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Preset {
     pub name: String,
@@ -68,35 +67,6 @@ impl Preset {
     pub fn is_empty(&self) -> bool {
         self.packages.is_empty()
     }
-}
-
-/// Reads the `<string>` entries out of a Bloatbox `Freshstart.xml`-style preset.
-///
-/// The original tool serialised a `List<string>` through .NET's XML serialiser, so the
-/// document is always the same two-element shape. A targeted extractor for that one
-/// shape is more honest than pulling an XML parser in as a dependency, and it is
-/// tested against the real document under `references/`.
-///
-/// Unclosed tags stop the scan rather than erroring: a truncated preset should import
-/// what it can, and the caller reports how many names landed.
-pub fn import_bloatbox_xml(text: &str) -> Vec<String> {
-    const OPEN: &str = "<string>";
-    const CLOSE: &str = "</string>";
-
-    let mut packages: Vec<String> = Vec::new();
-    let mut rest = text;
-    while let Some(start) = rest.find(OPEN) {
-        let after_open = &rest[start + OPEN.len()..];
-        let Some(end) = after_open.find(CLOSE) else {
-            break;
-        };
-        let value = after_open[..end].trim();
-        if !value.is_empty() && !packages.iter().any(|existing| existing == value) {
-            packages.push(value.to_string());
-        }
-        rest = &after_open[end + CLOSE.len()..];
-    }
-    packages
 }
 
 /// Every `.txt` preset in a directory, sorted by name. A missing directory is an
@@ -177,51 +147,5 @@ mod tests {
         let presets = library(dir).unwrap();
         assert!(!presets.is_empty(), "expected at least one shipped preset");
         assert!(presets.iter().any(|p| p.name.contains("fresh start")));
-    }
-
-    #[test]
-    fn imports_a_bloatbox_xml_preset() {
-        let xml = r#"<?xml version="1.0"?>
-<Config><Bloatware>
-<string>4DF9E0F8.Netflix</string>
-<string>Microsoft.BingNews</string>
-</Bloatware></Config>"#;
-        assert_eq!(
-            import_bloatbox_xml(xml),
-            vec!["4DF9E0F8.Netflix", "Microsoft.BingNews"]
-        );
-    }
-
-    #[test]
-    fn importing_tolerates_whitespace_and_deduplicates() {
-        let xml = "<string>\n  Microsoft.ZuneMusic\n</string><string>Microsoft.ZuneMusic</string>";
-        assert_eq!(import_bloatbox_xml(xml), vec!["Microsoft.ZuneMusic"]);
-    }
-
-    #[test]
-    fn an_unclosed_tag_keeps_what_came_before_it() {
-        let xml = "<string>Microsoft.BingNews</string><string>dangling";
-        assert_eq!(import_bloatbox_xml(xml), vec!["Microsoft.BingNews"]);
-    }
-
-    #[test]
-    fn importing_a_document_without_entries_yields_nothing() {
-        assert!(import_bloatbox_xml("<Config><Bloatware /></Config>").is_empty());
-        assert!(import_bloatbox_xml("").is_empty());
-    }
-
-    #[test]
-    fn imports_the_real_bloatbox_reference_preset() {
-        // The reference copy is vendored, not built; skip if it is not checked out.
-        let doc = concat!(
-            env!("CARGO_MANIFEST_DIR"),
-            "/../../references/bloatbox/src/Bloatbox/Resources/Freshstart.xml"
-        );
-        let Ok(text) = std::fs::read_to_string(doc) else {
-            return;
-        };
-        let packages = import_bloatbox_xml(&text);
-        assert!(packages.len() > 30, "got {} packages", packages.len());
-        assert!(packages.iter().any(|name| name == "Microsoft.BingNews"));
     }
 }

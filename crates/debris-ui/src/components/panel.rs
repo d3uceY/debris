@@ -14,7 +14,6 @@
 //! hairline. The bands are what make a region read as a region — there is no card,
 //! no shadow, and no radius around the body.
 
-use crate::components::eyebrow;
 use crate::theme::{Theme, metrics, space, text, veil};
 use gpui::{AnyElement, Div, FontWeight, IntoElement, ParentElement, SharedString, Styled, div, px};
 
@@ -109,26 +108,4 @@ pub fn panel_footer(theme: &Theme) -> Div {
 /// that scrolls.
 pub fn panel_body() -> Div {
     div().flex().flex_col().flex_1().min_h_0().w_full().overflow_hidden()
-}
-
-/// A label for a sub-region inside a panel body, with a hairline under it.
-pub fn inner_header(theme: &Theme, label: impl Into<SharedString>, trailing: Option<AnyElement>) -> AnyElement {
-    let mut row = div()
-        .flex()
-        .flex_row()
-        .items_center()
-        .justify_between()
-        .gap(px(space::SM))
-        .w_full()
-        .flex_shrink_0()
-        .px(px(space::MD))
-        .py(px(space::XS + 2.0))
-        .border_b_1()
-        .border_color(theme.border.opacity(veil::HAIRLINE))
-        .child(eyebrow(theme, label.into()));
-
-    if let Some(trailing) = trailing {
-        row = row.child(trailing);
-    }
-    row.into_any_element()
 }

@@ -29,55 +29,49 @@ pub enum Variant {
     DangerGhost,
 }
 
+/// The two control heights. A mark-only control is the same shape with its label
+/// dropped, so that is a flag on the button rather than two more variants.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Size {
     /// The default: 28px tall. Toolbars, footers, panel headers.
     Md,
     /// 22px tall. Inside another control's band.
     Sm,
-    /// A 28px square holding only a mark.
-    Icon,
-    /// A 22px square holding only a mark.
-    IconSm,
 }
 
 impl Size {
     fn height(self) -> f32 {
         match self {
-            Size::Md | Size::Icon => metrics::CONTROL,
-            Size::Sm | Size::IconSm => metrics::CONTROL_SM,
+            Size::Md => metrics::CONTROL,
+            Size::Sm => metrics::CONTROL_SM,
         }
     }
 
     fn text(self) -> f32 {
         match self {
-            Size::Md | Size::Icon => text::SMALL,
-            Size::Sm | Size::IconSm => text::LABEL,
+            Size::Md => text::SMALL,
+            Size::Sm => text::LABEL,
         }
     }
 
     fn mark(self) -> f32 {
         match self {
-            Size::Md | Size::Icon => crate::icons::CONTROL,
-            Size::Sm | Size::IconSm => crate::icons::INLINE,
+            Size::Md => crate::icons::CONTROL,
+            Size::Sm => crate::icons::INLINE,
         }
-    }
-
-    fn is_icon(self) -> bool {
-        matches!(self, Size::Icon | Size::IconSm)
     }
 
     fn gap(self) -> f32 {
         match self {
-            Size::Md | Size::Icon => 6.0,
-            Size::Sm | Size::IconSm => space::XS,
+            Size::Md => 6.0,
+            Size::Sm => space::XS,
         }
     }
 
     fn pad(self) -> f32 {
         match self {
-            Size::Md | Size::Icon => space::SM,
-            Size::Sm | Size::IconSm => 6.0,
+            Size::Md => space::SM,
+            Size::Sm => 6.0,
         }
     }
 }
@@ -140,6 +134,7 @@ pub struct Button<'a> {
     keycap: Option<SharedString>,
     variant: Variant,
     size: Size,
+    icon_only: bool,
     enabled: bool,
     tooltip: Option<SharedString>,
 }
@@ -154,6 +149,7 @@ pub fn button<'a>(theme: &'a Theme, id: impl Into<SharedString>) -> Button<'a> {
         keycap: None,
         variant: Variant::Outline,
         size: Size::Md,
+        icon_only: false,
         enabled: true,
         tooltip: None,
     }
@@ -207,21 +203,13 @@ impl<'a> Button<'a> {
     }
 
     pub fn small(mut self) -> Self {
-        self.size = if self.size.is_icon() {
-            Size::IconSm
-        } else {
-            Size::Sm
-        };
+        self.size = Size::Sm;
         self
     }
 
     /// A button that shows only its mark. Pair it with [`Button::tooltip`].
     pub fn icon_only(mut self) -> Self {
-        self.size = if self.size == Size::Sm {
-            Size::IconSm
-        } else {
-            Size::Icon
-        };
+        self.icon_only = true;
         self
     }
 
@@ -245,13 +233,13 @@ impl<'a> Button<'a> {
             keycap,
             variant,
             size,
+            icon_only,
             enabled,
             tooltip,
         } = self;
 
         let skin = skin(theme, variant);
         let height = size.height();
-        let icon_only = size.is_icon();
 
         let mut element = div()
             .id(id)

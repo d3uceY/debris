@@ -113,7 +113,6 @@ impl Root {
         self.snapshot.error = self.error.clone();
         self.snapshot.elevated = self.elevation;
         self.snapshot.dry_run = self.dry_run;
-        self.snapshot.reduce_motion = self.theme.reduce_motion;
         self.snapshot.clamp_cursor();
         cx.notify();
     }
@@ -406,7 +405,6 @@ impl DebrisApp for Root {
     fn set_reduce_motion(&mut self, on: bool, cx: &mut Context<Self>) {
         self.theme.reduce_motion = on;
         cx.set_global(self.theme.clone());
-        self.snapshot.reduce_motion = on;
         cx.notify();
     }
 

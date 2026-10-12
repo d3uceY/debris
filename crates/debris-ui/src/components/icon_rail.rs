@@ -56,18 +56,6 @@ where
         .into_any_element()
 }
 
-/// A short rule between groups of rail buttons.
-pub fn rail_divider(theme: &Theme) -> AnyElement {
-    div()
-        .w(px(20.0))
-        .h(px(8.0))
-        .flex_shrink_0()
-        .flex()
-        .items_center()
-        .child(div().w_full().h(px(1.0)).bg(theme.border))
-        .into_any_element()
-}
-
 /// The rail's own frame.
 pub fn rail_shell(theme: &Theme) -> gpui::Div {
     div()

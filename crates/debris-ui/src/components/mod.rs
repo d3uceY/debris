@@ -123,26 +123,6 @@ pub fn section_eyebrow(
     row
 }
 
-/// A number over its caption. The only numbers that get size.
-pub fn metric(theme: &Theme, value: impl Into<SharedString>, caption: &str) -> Div {
-    v_flex()
-        .gap(px(1.0))
-        .child(
-            div()
-                .font_family(theme.font_mono.clone())
-                .text_size(px(text::SUBTITLE))
-                .font_weight(FontWeight::MEDIUM)
-                .text_color(theme.foreground)
-                .child(value.into()),
-        )
-        .child(
-            div()
-                .text_size(px(text::LABEL))
-                .text_color(theme.muted_foreground)
-                .child(caption.to_string()),
-        )
-}
-
 // ---------------------------------------------------------------------------
 // Chips
 // ---------------------------------------------------------------------------
@@ -385,33 +365,36 @@ pub fn empty_state(
                 .bg(theme.band(veil::CHIP))
                 .child(icon(mark, crate::icons::TILE, theme.muted_foreground)),
         )
-        .child(
-            v_flex()
-                .items_center()
-                .gap(px(3.0))
-                .child(
-                    div()
-                        .text_size(px(text::SUBTITLE))
-                        .font_family(theme.font_ui.clone())
-                        .font_weight(FontWeight::SEMIBOLD)
-                        .text_color(theme.foreground)
-                        .child(heading.to_string()),
-                )
-                .child(
-                    div()
-                        .max_w(px(360.0))
-                        .text_size(px(text::SMALL))
-                        .font_family(theme.font_ui.clone())
-                        .text_color(theme.muted_foreground)
-                        .text_center()
-                        .child(body.to_string()),
-                ),
-        );
+        .child(state_copy(theme, heading, body, 360.0));
 
     if let Some(action) = action {
         column = column.child(action);
     }
     column.into_any_element()
+}
+
+/// The heading-and-body block both states share: a title over a wrapped sentence.
+fn state_copy(theme: &Theme, heading: &str, body: &str, max_w: f32) -> Div {
+    v_flex()
+        .items_center()
+        .gap(px(3.0))
+        .child(
+            div()
+                .text_size(px(text::SUBTITLE))
+                .font_family(theme.font_ui.clone())
+                .font_weight(FontWeight::SEMIBOLD)
+                .text_color(theme.foreground)
+                .child(heading.to_string()),
+        )
+        .child(
+            div()
+                .max_w(px(max_w))
+                .text_size(px(text::SMALL))
+                .font_family(theme.font_ui.clone())
+                .text_color(theme.muted_foreground)
+                .text_center()
+                .child(body.to_string()),
+        )
 }
 
 /// A failure, naming the problem and the recovery.
@@ -436,28 +419,7 @@ pub fn error_state(theme: &Theme, heading: &str, body: &str) -> AnyElement {
                 .bg(theme.danger_soft)
                 .child(icon(Icon::Alert, crate::icons::TILE, theme.danger)),
         )
-        .child(
-            v_flex()
-                .items_center()
-                .gap(px(3.0))
-                .child(
-                    div()
-                        .text_size(px(text::SUBTITLE))
-                        .font_family(theme.font_ui.clone())
-                        .font_weight(FontWeight::SEMIBOLD)
-                        .text_color(theme.foreground)
-                        .child(heading.to_string()),
-                )
-                .child(
-                    div()
-                        .max_w(px(400.0))
-                        .text_size(px(text::SMALL))
-                        .font_family(theme.font_ui.clone())
-                        .text_color(theme.muted_foreground)
-                        .text_center()
-                        .child(body.to_string()),
-                ),
-        )
+        .child(state_copy(theme, heading, body, 400.0))
         .into_any_element()
 }
 

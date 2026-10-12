@@ -8,9 +8,8 @@
 //! The three implementations are deliberate:
 //!
 //! - [`ProcessRunner`] actually spawns. Used by the app.
-//! - [`DryRunRunner`] records what it would have run and returns success. Used when
-//!   the user is previewing.
-//! - [`ScriptedRunner`] replays canned output. Used by tests.
+//! - [`DryRunRunner`] and [`ScriptedRunner`] are test doubles: they record the
+//!   invocations and replay canned output, so a test never spawns anything.
 
 pub mod discovery;
 pub mod removal;

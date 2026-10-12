@@ -7,12 +7,6 @@ pub struct Counts {
     pub staged: usize,
 }
 
-impl Counts {
-    pub fn is_dirty(&self) -> bool {
-        self.staged > 0
-    }
-}
-
 /// What the inventory column is currently showing.
 #[derive(Clone, Debug, Default)]
 pub struct Filter {
@@ -278,12 +272,6 @@ impl Staging {
         }
         self.rebuild_visible();
         count
-    }
-
-    pub fn removal_names(&self) -> Vec<String> {
-        let mut names: Vec<String> = self.removal.iter().map(|p| p.name.clone()).collect();
-        names.dedup();
-        names
     }
 
     fn sort_removal(&mut self) {

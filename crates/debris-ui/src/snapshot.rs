@@ -170,9 +170,6 @@ pub struct Snapshot {
     pub status: Status,
     /// A scan in flight — the surface shows the determinate bar rather than nothing.
     pub loading: Option<String>,
-    /// Mirrors `Theme::reduce_motion`, so a handler can read it without reaching for
-    /// the global.
-    pub reduce_motion: bool,
     /// A scan or a run failed in a way that has no inline home.
     pub error: Option<String>,
 }

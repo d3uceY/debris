@@ -11,7 +11,7 @@
 use crate::components::{divider, pulse_dot};
 use crate::icons::{Icon, icon};
 use crate::snapshot::{Status, StatusTone};
-use crate::theme::{Theme, metrics, radius, space, text};
+use crate::theme::{Theme, metrics, space, text};
 use gpui::{AnyElement, IntoElement, ParentElement, Rgba, SharedString, div, prelude::*, px};
 
 /// One label/value pair on the rail.
@@ -40,44 +40,6 @@ pub fn segment(theme: &Theme, label: &str, value: impl Into<SharedString>, dot: 
             .child(value.into()),
     )
     .into_any_element()
-}
-
-/// A segment that is a control: it carries its own hover and click.
-pub fn segment_button(theme: &Theme, id: &str, label: &str, value: impl Into<SharedString>, active: bool) -> AnyElement {
-    let color = if active {
-        theme.foreground
-    } else {
-        theme.muted_foreground
-    };
-    // Hover closures are `'static`; copy the fill out of the theme first.
-    let hover_fill = theme.band(crate::theme::veil::BAND);
-    let active_fill = theme.band(crate::theme::veil::BAND);
-    div()
-        .id(id.to_string())
-        .flex()
-        .flex_row()
-        .items_center()
-        .gap(px(space::XS))
-        .h(px(metrics::STATUS_BAR - 8.0))
-        .px(px(6.0))
-        .flex_shrink_0()
-        .rounded(px(4.0))
-        .text_color(color)
-        .cursor_pointer()
-        .when(active, move |el| el.bg(active_fill))
-        .hover(move |style| style.bg(hover_fill))
-        .child(
-            div()
-                .text_size(px(text::LABEL))
-                .child(label.to_string()),
-        )
-        .child(
-            div()
-                .text_size(px(text::LABEL))
-                .font_family(theme.font_mono.clone())
-                .child(value.into()),
-        )
-        .into_any_element()
 }
 
 /// The rail itself.
@@ -173,19 +135,5 @@ pub fn status_bar(
                         .child(if reduce_motion { "motion off" } else { "motion on" }),
                 ),
         )
-        .into_any_element()
-}
-
-/// A keycap-shaped reminder used in a panel footer, styled to match the rail.
-pub fn footer_hint(theme: &Theme, text_content: impl Into<SharedString>) -> AnyElement {
-    div()
-        .flex()
-        .flex_row()
-        .items_center()
-        .gap(px(space::XS))
-        .text_size(px(text::LABEL))
-        .text_color(theme.muted_foreground)
-        .rounded(px(radius::CHIP))
-        .child(text_content.into())
         .into_any_element()
 }

@@ -153,8 +153,9 @@ impl CommandRunner for ProcessRunner {
 
 /// Records invocations and reports success without running anything.
 ///
-/// This is not only a test double: it is what backs the preview state, so the
-/// interface can show a real list of what would happen.
+/// A test double, like [`ScriptedRunner`]: the live preview is the `-DryRun` flag
+/// handed to a script, not a runner. This exists so a test can assert on exactly
+/// what would have run without spawning anything.
 #[derive(Debug, Default)]
 pub struct DryRunRunner {
     log: Mutex<Vec<Invocation>>,

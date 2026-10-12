@@ -24,8 +24,8 @@
 
 use crate::components::{Tone, chip, chip_with};
 use crate::icons::{Icon, icon};
-use crate::theme::{Theme, metrics, radius, space, text, veil};
-use debris_core::{AppxPackage, Caveat, Category, Preset, Risk, ScriptMeta};
+use crate::theme::{Theme, metrics, space, text, veil};
+use debris_core::{AppxPackage, Caveat, Preset, Risk, ScriptMeta};
 use gpui::{
     AnyElement, App, ClickEvent, FontWeight, IntoElement, Rgba, SharedString, Window, div,
     prelude::*, px, rgba,
@@ -74,10 +74,6 @@ pub fn risk_chip(theme: &Theme, risk: Risk) -> AnyElement {
         Risk::Destructive => Tone::Danger,
     };
     chip(theme, risk.label(), tone).into_any_element()
-}
-
-pub fn category_chip(theme: &Theme, category: Category) -> AnyElement {
-    chip(theme, category.label(), Tone::Quiet).into_any_element()
 }
 
 // ---------------------------------------------------------------------------
@@ -528,74 +524,4 @@ pub fn description_row(
                 }),
         )
         .into_any_element()
-}
-
-/// A selected filter row, in a navigator pane: a full-width button with a chevron
-/// when it is the one in force.
-pub fn nav_row<F>(
-    theme: &Theme,
-    id: impl Into<gpui::ElementId>,
-    mark: Option<Icon>,
-    label: impl Into<SharedString>,
-    count: Option<usize>,
-    active: bool,
-    on_click: F,
-) -> AnyElement
-where
-    F: Fn(&ClickEvent, &mut Window, &mut App) + 'static,
-{
-    let label = label.into();
-    let fill = if active {
-        theme.sidebar_accent
-    } else {
-        rgba(0x00000000)
-    };
-    let hover = theme.sidebar_accent.opacity(0.6);
-    let text_color = if active {
-        theme.foreground
-    } else {
-        theme.muted_foreground
-    };
-    let icon_color = text_color;
-    let font = theme.font_ui.clone();
-
-    let mut row = div()
-        .id(id)
-        .flex()
-        .flex_row()
-        .items_center()
-        .w_full()
-        .gap(px(space::SM))
-        .h(px(metrics::CONTROL))
-        .flex_shrink_0()
-        .mx(px(space::SM))
-        .px(px(space::SM))
-        .rounded(px(radius::CONTROL))
-        .bg(fill)
-        .text_color(text_color)
-        .cursor_pointer()
-        .hover(move |style| style.bg(hover))
-        .on_click(on_click);
-
-    if let Some(mark) = mark {
-        row = row.child(icon(mark, LEAD_ICON, icon_color));
-    }
-    row = row.child(
-        div()
-            .flex_1()
-            .min_w_0()
-            .truncate()
-            .font_family(font)
-            .text_size(px(text::SMALL))
-            .child(label),
-    );
-    if let Some(count) = count {
-        row = row.child(
-            div()
-                .font_family(theme.font_mono.clone())
-                .text_size(px(text::LABEL))
-                .child(count.to_string()),
-        );
-    }
-    row.into_any_element()
 }

@@ -160,6 +160,15 @@ pub fn root<T: DebrisApp>(this: &mut T, cx: &mut Context<T>) -> AnyElement {
         .into_any_element()
 }
 
+/// Which mark and tooltip the appearance toggle shows, given the current tokens.
+fn appearance_toggle(theme: &Theme) -> (Icon, SharedString) {
+    if theme.appearance == ThemeAppearance::Dark {
+        (Icon::Sun, "Switch to light appearance".into())
+    } else {
+        (Icon::Moon, "Switch to dark appearance".into())
+    }
+}
+
 /// The 36px band at the top: where you are, one search field, and the actions that
 /// apply to the whole app.
 ///
@@ -171,16 +180,7 @@ fn title_bar<T: DebrisApp>(
     search_focus: &FocusHandle,
     cx: &mut Context<T>,
 ) -> AnyElement {
-    let appearance_mark = if theme.appearance == ThemeAppearance::Dark {
-        Icon::Sun
-    } else {
-        Icon::Moon
-    };
-    let appearance_tip: SharedString = if theme.appearance == ThemeAppearance::Dark {
-        "Switch to light appearance".into()
-    } else {
-        "Switch to dark appearance".into()
-    };
+    let (appearance_mark, appearance_tip) = appearance_toggle(theme);
 
     div()
         .flex()
@@ -337,16 +337,7 @@ fn rail<T: DebrisApp>(theme: &Theme, snapshot: &Snapshot, cx: &mut Context<T>) -
         ));
     }
 
-    let appearance_mark = if theme.appearance == ThemeAppearance::Dark {
-        Icon::Sun
-    } else {
-        Icon::Moon
-    };
-    let appearance_tip: SharedString = if theme.appearance == ThemeAppearance::Dark {
-        "Switch to light appearance".into()
-    } else {
-        "Switch to dark appearance".into()
-    };
+    let (appearance_mark, appearance_tip) = appearance_toggle(theme);
 
     rail
         .child(rail_spacer())
