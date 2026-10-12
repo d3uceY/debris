@@ -85,7 +85,7 @@ lib/            shared module: logging, dry-run plumbing, elevation checks
 apps/           install, remove, or restore preinstalled applications
 privacy/        telemetry, background services, network rules
 shell/          Explorer and Start menu
-maintenance/    elevated system-level tasks
+maintenance/    system housekeeping: cleanup, caches, and resets
 ```
 
 `lib/` is skipped by the loader — shared modules are not user-facing scripts.

@@ -71,7 +71,7 @@ scripts/         the PowerShell library, segmented by intent
   apps/          remove or restore preinstalled apps
   privacy/       telemetry, services
   shell/         Explorer and Start menu
-  maintenance/   elevated system tasks
+  maintenance/   system housekeeping: cleanup, caches, and resets
 assets/
   icons/         the SVG icon set
   data/          system-app list, shipped presets
