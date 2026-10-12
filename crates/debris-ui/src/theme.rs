@@ -3,11 +3,17 @@
 //! One source of truth for every colour, radius, and step. A leaf component never
 //! hardcodes a hex — if a value is not here, it is not part of the design system.
 //!
-//! Two deliberate departures from the usual GPUI playbook, both required by the
-//! Swiss brief and both documented in `DESIGN.md`: corners are square rather than
-//! 12–16px, and there are no shadows at all. Separation is a hairline rule.
+//! # The system
+//!
+//! Tokens are the shadcn/Tailwind **neutral** scale, the same one the reference
+//! desktop app uses: a near-monochrome field, one hairline colour, and colour
+//! reserved for meaning (removal, caution, success). Depth is never a shadow — it
+//! is a token at reduced opacity, laid over the surface beneath it.
+//!
+//! Read `DESIGN.md` before changing a token. The zone heights and the neutral ramp
+//! are the two things every screen is measured against.
 
-use gpui::{App, Global, Rgba, SharedString, rgb, rgba};
+use gpui::{App, Global, Rgba, SharedString, rgb};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Appearance {
@@ -28,71 +34,162 @@ pub mod space {
 }
 
 /// Fixed sizes: desktop at fixed DPI wants fixed steps, not a fluid scale.
+///
+/// The top of the ramp is deliberately low. This is a tool, not a landing page —
+/// the largest type on a screen is a section title or a count, never a hero.
 pub mod text {
-    pub const DISPLAY: f32 = 34.0;
-    pub const TITLE: f32 = 20.0;
-    pub const SUBTITLE: f32 = 15.0;
-    pub const BODY: f32 = 14.0;
-    pub const SMALL: f32 = 12.0;
     pub const LABEL: f32 = 11.0;
+    pub const SMALL: f32 = 12.0;
+    pub const BODY: f32 = 13.0;
+    pub const SUBTITLE: f32 = 14.0;
+    pub const TITLE: f32 = 15.0;
+    pub const HEADING: f32 = 18.0;
+    pub const DISPLAY: f32 = 24.0;
 }
 
-/// Square containers, barely-there controls. See `DESIGN.md`.
+/// One radius scale, so a chip, a control, a panel, and a rail button are
+/// recognisably the same family.
 pub mod radius {
-    pub const CONTROL: f32 = 2.0;
-    pub const CONTAINER: f32 = 0.0;
+    /// Badges and keycaps.
+    pub const CHIP: f32 = 5.0;
+    /// Buttons, inputs, panels.
+    pub const CONTROL: f32 = 6.0;
+    /// The floating command shell and tooltips.
+    pub const FLOATING: f32 = 8.0;
+    /// Icon-rail buttons.
+    pub const RAIL: f32 = 8.0;
+    /// The icon tile in an empty state.
+    pub const TILE: f32 = 10.0;
 }
 
-/// Structural heights, so the grid is arithmetic rather than guesswork.
-pub mod layout {
-    pub const HEADER: f32 = 56.0;
-    pub const RAIL: f32 = 232.0;
-    pub const ROW: f32 = 32.0;
-    pub const STATUS_BAR: f32 = 28.0;
-    pub const CONTROL: f32 = 32.0;
-    pub const CONTENT_MAX: f32 = 1120.0;
-    pub const REMOVAL_COLUMN: f32 = 340.0;
+/// Structural heights. The grid is arithmetic, not guesswork — every horizontal
+/// band in the shell is one of these.
+pub mod metrics {
+    /// The window's top band: identity, command shell, global actions.
+    pub const TITLE_BAR: f32 = 36.0;
+    /// The bottom band: state segments.
+    pub const STATUS_BAR: f32 = 26.0;
+    /// The title strip on a boxed panel. Tall enough for a title *and* a subtitle —
+    /// a header that can only fit one line forces every panel to choose between
+    /// naming itself and saying anything useful.
+    pub const PANEL_HEADER: f32 = 38.0;
+    /// A strip of controls between the header and the content.
+    pub const TOOLBAR: f32 = 30.0;
+    /// A data table's column header.
+    pub const COLUMN_HEADER: f32 = 26.0;
+    /// One row of a dense list or table.
+    pub const ROW: f32 = 30.0;
+    /// A control's height.
+    pub const CONTROL: f32 = 28.0;
+    /// A control inside another control's band (icon buttons, status chips).
+    pub const CONTROL_SM: f32 = 22.0;
+    /// The vertical surface switcher.
+    pub const ICON_RAIL: f32 = 48.0;
+    /// One button on the icon rail.
+    pub const RAIL_ITEM: f32 = 34.0;
+    /// The left column: the removal queue.
+    pub const SIDEBAR: f32 = 304.0;
+    /// The right column: the inspector.
+    pub const INSPECTOR: f32 = 300.0;
+    /// Horizontal inset for a list row or a section header. One number, so a
+    /// sidebar's rows and its section labels share an edge.
+    pub const INSET: f32 = 8.0;
+    /// The command shell in the title bar.
+    pub const COMMAND_SHELL: f32 = 420.0;
+}
+
+/// The opacity ladder for *depth without shadow*.
+///
+/// GPUI gives you flat fills; it does not give you a material. So a header strip, a
+/// toolbar, and a hovered row are all the same `muted` token, laid over the surface
+/// beneath at one of these fractions. Naming them stops the drift you get from
+/// sprinkling `0.2`, `0.22`, `0.25` through a codebase.
+pub mod veil {
+    /// A header or toolbar band. Barely there; it separates without a border.
+    pub const BAND: f32 = 0.22;
+    /// A quieter band — a strip inside an already-tinted region.
+    pub const BAND_QUIET: f32 = 0.14;
+    /// A chip, a badge, a pill's own fill.
+    pub const CHIP: f32 = 0.34;
+    /// A panel's own border, one step softer than the structural rule.
+    pub const HAIRLINE: f32 = 0.72;
+    /// A table's row rule. Softer still, because there are many of them.
+    pub const ROW_RULE: f32 = 0.55;
+    /// An icon's stroke when it is decoration rather than a control.
+    pub const ICON: f32 = 0.9;
 }
 
 #[derive(Clone, Debug)]
 pub struct Theme {
     pub appearance: Appearance,
 
-    /// The Swiss grotesque. `Arial` is the Helvetica lineage and is present on every
-    /// Windows machine; swapping to a bundled `Inter` or `Neue Haas Grotesk` means
-    /// changing this one field.
+    /// The UI face. `Segoe UI` is the platform's own grotesque and is present on
+    /// every Windows machine; nothing is bundled, so this is the one field to
+    /// change to move the whole app onto a downloaded face.
     pub font_ui: SharedString,
-    /// Monospace is for data, identifiers, and measurement — which is all of the
+    /// Monospace is for data, identifiers, and measurement — which is most of the
     /// text this app shows about packages.
     pub font_mono: SharedString,
 
-    pub surface: Rgba,
-    pub surface_sunken: Rgba,
-    pub surface_hover: Rgba,
-    pub surface_selected: Rgba,
+    /// The page: the center dock and the inspector.
+    pub background: Rgba,
+    /// The title bar band.
+    pub title_bar: Rgba,
+    /// The icon rail and the left column.
+    pub sidebar: Rgba,
+    /// A selected rail button, or a selected row in the left column. The one
+    /// "this is where you are" fill in the shell.
+    pub sidebar_accent: Rgba,
 
-    pub ink: Rgba,
-    pub ink_muted: Rgba,
-    pub ink_faint: Rgba,
-    pub ink_inverse: Rgba,
-    pub ink_hover: Rgba,
+    /// Text at full strength.
+    pub foreground: Rgba,
+    /// Text at second strength. The only other text colour there is — every value
+    /// in this interface is either `foreground` or this, and both clear 4.5:1 on
+    /// every surface they are allowed to sit on.
+    pub muted_foreground: Rgba,
 
-    pub rule: Rgba,
-    pub rule_strong: Rgba,
+    /// The structural hairline: panel edges, column edges, band edges.
+    pub border: Rgba,
+    /// The edge of the left column, one step darker than a panel's.
+    pub sidebar_border: Rgba,
+    /// The resting edge of an input, which sits a step *above* `border` so a field
+    /// reads as a field rather than a slot.
+    pub input: Rgba,
 
+    /// The ordinary hover fill, for rows and quiet buttons.
+    pub muted: Rgba,
+    /// Text on `muted` when it is being used as a solid chip.
+    pub muted_foreground_solid: Rgba,
+
+    /// The one primary action on a screen.
+    pub primary: Rgba,
+    pub primary_foreground: Rgba,
+    pub primary_hover: Rgba,
+    /// A neutral selected/hovered fill one step stronger than `muted`.
     pub accent: Rgba,
-    pub accent_hover: Rgba,
-    pub accent_text: Rgba,
-    pub accent_soft: Rgba,
+    pub accent_foreground: Rgba,
 
+    /// Removal, as text and as a border. Nothing else is red.
+    pub danger: Rgba,
+    /// Red as a *fill*, with its own readable foreground.
+    pub danger_solid: Rgba,
+    pub danger_solid_foreground: Rgba,
+    /// A wash of red for a staged row.
+    pub danger_soft: Rgba,
+
+    /// Caution: a system-critical package, a dry run that is switched off.
     pub warning: Rgba,
     pub warning_soft: Rgba,
+
+    /// Confirmed.
     pub success: Rgba,
+    pub success_soft: Rgba,
 
-    pub focus_ring: Rgba,
+    /// The keyboard focus ring.
+    pub ring: Rgba,
 
-    /// GPUI has no `prefers-reduced-motion`. The app exposes a setting and writes it
-    /// here, so every animation can consult one flag.
+    /// GPUI has no `prefers-reduced-motion`. The app exposes a setting and writes
+    /// it here, so every animation can consult one flag.
     pub reduce_motion: bool,
 }
 
@@ -103,74 +200,91 @@ impl Default for Theme {
 }
 
 impl Theme {
-    /// The default. The scene — a deliberate maintenance task at a desk in daylight —
-    /// picks it (see PRODUCT.md).
     pub fn light() -> Self {
         Self {
             appearance: Appearance::Light,
-            font_ui: "Arial".into(),
+            font_ui: "Segoe UI".into(),
             font_mono: "Consolas".into(),
 
-            surface: rgb(0xFFFFFF),
-            surface_sunken: rgb(0xF6F6F6),
-            surface_hover: rgb(0xF0F0F0),
-            surface_selected: rgb(0xE8E8E8),
+            background: rgb(0xFFFFFF),
+            title_bar: rgb(0xF8F8F8),
+            sidebar: rgb(0xFAFAFA),
+            sidebar_accent: rgb(0xE5E5E5),
 
-            ink: rgb(0x111111),
-            ink_muted: rgb(0x5C5C5C),
-            ink_faint: rgb(0x8A8A8A),
-            ink_inverse: rgb(0xFFFFFF),
-            ink_hover: rgb(0x000000),
+            foreground: rgb(0x0A0A0A),
+            muted_foreground: rgb(0x737373),
 
-            rule: rgb(0xDFDFDF),
-            rule_strong: rgb(0xB4B4B4),
+            border: rgb(0xE5E5E5),
+            sidebar_border: rgb(0xE5E5E5),
+            input: rgb(0xD4D4D4),
 
-            accent: rgb(0xD92D20),
-            accent_hover: rgb(0xB7231A),
-            accent_text: rgb(0xFFFFFF),
-            accent_soft: rgb(0xFDEDEC),
+            muted: rgb(0xF5F5F5),
+            muted_foreground_solid: rgb(0x171717),
 
-            warning: rgb(0xB25E09),
-            warning_soft: rgb(0xFDF3E7),
-            success: rgb(0x1F7A3D),
+            primary: rgb(0x171717),
+            primary_foreground: rgb(0xFAFAFA),
+            primary_hover: rgb(0x404040),
+            accent: rgb(0xE5E5E5),
+            accent_foreground: rgb(0x171717),
 
-            focus_ring: rgb(0x111111),
+            danger: rgb(0xDC2626),
+            danger_solid: rgb(0xDC2626),
+            danger_solid_foreground: rgb(0xFAFAFA),
+            danger_soft: rgb(0xFEF2F2),
+
+            warning: rgb(0xB45309),
+            warning_soft: rgb(0xFFFBEB),
+
+            success: rgb(0x15803D),
+            success_soft: rgb(0xF0FDF4),
+
+            ring: rgb(0x171717),
             reduce_motion: false,
         }
     }
 
-    /// The same roles on ink surfaces. The accent lifts so it still clears 4.5:1
-    /// against the dark field rather than sitting at the light value.
+    /// The same roles on ink surfaces. Every semantic lifts so it still clears
+    /// 4.5:1 against the dark field rather than sitting at the light value — a dark
+    /// theme is a re-derivation, not an inversion.
     pub fn dark() -> Self {
         Self {
             appearance: Appearance::Dark,
-            font_ui: "Arial".into(),
+            font_ui: "Segoe UI".into(),
             font_mono: "Consolas".into(),
 
-            surface: rgb(0x0E0E0E),
-            surface_sunken: rgb(0x171717),
-            surface_hover: rgb(0x1F1F1F),
-            surface_selected: rgb(0x2A2A2A),
+            background: rgb(0x0A0A0A),
+            title_bar: rgb(0x171717),
+            sidebar: rgb(0x0A0A0A),
+            sidebar_accent: rgb(0x262626),
 
-            ink: rgb(0xF2F2F2),
-            ink_muted: rgb(0xA8A8A8),
-            ink_faint: rgb(0x7A7A7A),
-            ink_inverse: rgb(0x0E0E0E),
-            ink_hover: rgb(0xFFFFFF),
+            foreground: rgb(0xFAFAFA),
+            muted_foreground: rgb(0xA3A3A3),
 
-            rule: rgb(0x2A2A2A),
-            rule_strong: rgb(0x4A4A4A),
+            border: rgb(0x262626),
+            sidebar_border: rgb(0x262626),
+            input: rgb(0x2F2F2F),
 
-            accent: rgb(0xFF5A4D),
-            accent_hover: rgb(0xFF7A70),
-            accent_text: rgb(0x0E0E0E),
-            accent_soft: rgb(0x2A1512),
+            muted: rgb(0x262626),
+            muted_foreground_solid: rgb(0xFAFAFA),
 
-            warning: rgb(0xE0A055),
-            warning_soft: rgb(0x2A1E0E),
-            success: rgb(0x5FBF7F),
+            primary: rgb(0xFAFAFA),
+            primary_foreground: rgb(0x171717),
+            primary_hover: rgb(0xD4D4D4),
+            accent: rgb(0x333333),
+            accent_foreground: rgb(0xFAFAFA),
 
-            focus_ring: rgb(0xF2F2F2),
+            danger: rgb(0xF87171),
+            danger_solid: rgb(0xDC2626),
+            danger_solid_foreground: rgb(0xFAFAFA),
+            danger_soft: rgb(0x2A1210),
+
+            warning: rgb(0xFBBF24),
+            warning_soft: rgb(0x2A1F08),
+
+            success: rgb(0x4ADE80),
+            success_soft: rgb(0x0B2313),
+
+            ring: rgb(0xFAFAFA),
             reduce_motion: false,
         }
     }
@@ -184,13 +298,19 @@ impl Theme {
         self.reduce_motion = reduce_motion;
     }
 
-    /// A wash for the accent, used behind a staged row. Kept as a function rather
-    /// than a token because it is derived, not chosen.
-    pub fn accent_wash(&self) -> Rgba {
+    /// A wash of red for a staged row. Deliberately strong enough to read at a
+    /// glance against the sidebar's own off-white — the row has to look *marked*,
+    /// not merely tinted.
+    pub fn danger_wash(&self) -> Rgba {
         match self.appearance {
-            Appearance::Light => rgba(0xD92D200F),
-            Appearance::Dark => rgba(0xFF5A4D1F),
+            Appearance::Light => rgb(0xDC2626).opacity(0.10),
+            Appearance::Dark => rgb(0xF87171).opacity(0.14),
         }
+    }
+
+    /// The band fill behind a panel header, a toolbar, or a column header.
+    pub fn band(&self, veil: f32) -> Rgba {
+        self.muted.opacity(veil)
     }
 }
 
