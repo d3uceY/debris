@@ -1,27 +1,30 @@
 //! The Packages surface — the primary one.
 //!
-//! Two columns over one hairline: the inventory on the left, the ledger of what will
-//! go on the right. The same row component is used in both, so a package that is
-//! staged is visibly the *same row* in a different place rather than a different
-//! looking thing.
+//! A table of everything installed, and the queue it feeds. The table's column
+//! header is not decoration: it is what lets the publisher and version columns be
+//! read at a glance rather than parsed per row.
+//!
+//! The surface owns exactly three controls (the filter is global and lives in the
+//! title bar), and the order is deliberate: the switch that changes *what is in the
+//! table*, then the count, then the one bulk action.
 
-use crate::components::button::{ButtonVariant, button};
-use crate::components::text_field::text_field;
-use crate::components::{checkbox, empty_state, error_state, label, loading_bar, rule};
+use crate::components::button::button;
+use crate::components::panel::{panel_body, panel_header};
+use crate::components::rows::package_columns;
+use crate::components::{Tone, chip, empty_state, error_state, loading_bar, switch};
 use crate::icons::Icon;
 use crate::snapshot::{Screen, Snapshot};
-use crate::theme::{Theme, layout, text};
-use crate::views::{DebrisApp, list_key_handler, package_list, section_title};
+use crate::theme::{Theme, space};
+use crate::views::{DebrisApp, shared};
 use gpui::{
-    AnyElement, ClickEvent, Context, FocusHandle, FontWeight, IntoElement, KeyDownEvent,
-    MouseButton, MouseDownEvent, WeakEntity, div, prelude::*, px,
+    AnyElement, ClickEvent, Context, FocusHandle, MouseButton, MouseDownEvent, WeakEntity, div,
+    prelude::*, px,
 };
 
 pub fn screen<T: DebrisApp>(
     theme: &Theme,
     snapshot: &Snapshot,
     root: &WeakEntity<T>,
-    search_focus: &FocusHandle,
     list_focus: &FocusHandle,
     cx: &mut Context<T>,
 ) -> AnyElement {
@@ -29,67 +32,55 @@ pub fn screen<T: DebrisApp>(
         .flex()
         .flex_col()
         .flex_1()
+        .min_w_0()
         .min_h_0()
-        .child(section_title(theme, Screen::Packages))
-        .child(rule(theme))
-        .child(toolbar::<T>(theme, snapshot, search_focus, cx))
-        .child(rule(theme))
-        .child(
-            div()
-                .flex()
-                .flex_1()
-                .min_h_0()
-                .child(inventory::<T>(theme, snapshot, root, list_focus, cx))
-                .child(removal::<T>(theme, snapshot, root, cx)),
-        )
+        .bg(theme.background)
+        .child(panel_header(
+            theme,
+            Screen::Packages.title(),
+            subtitle(snapshot),
+            None,
+        ))
+        .child(toolbar::<T>(theme, snapshot, cx))
+        .child(package_columns(theme))
+        .when(snapshot.is_busy(), |el| {
+            el.child(loading_bar(theme, "inventory-loading"))
+        })
+        .child(inventory::<T>(theme, snapshot, root, list_focus, cx))
         .into_any_element()
 }
 
-fn toolbar<T: DebrisApp>(
-    theme: &Theme,
-    snapshot: &Snapshot,
-    search_focus: &FocusHandle,
-    cx: &mut Context<T>,
-) -> AnyElement {
+fn subtitle(snapshot: &Snapshot) -> String {
+    let staged = snapshot.counts.staged;
+    let base = format!(
+        "{} installed · {} shown",
+        snapshot.counts.installed,
+        snapshot.inventory_len()
+    );
+    if staged == 0 {
+        base
+    } else {
+        format!("{base} · {staged} staged")
+    }
+}
+
+fn toolbar<T: DebrisApp>(theme: &Theme, snapshot: &Snapshot, cx: &mut Context<T>) -> AnyElement {
     let shown = snapshot.inventory_len();
+    let empty = shown == 0;
 
     div()
         .flex()
+        .flex_row()
         .items_center()
-        .gap_4()
-        .px_6()
-        .py_3()
+        .gap(px(space::SM))
+        .h(px(crate::theme::metrics::TOOLBAR))
+        .w_full()
         .flex_shrink_0()
-        .child(
-            div().w(px(340.0)).flex_shrink_0().child(text_field(
-                theme,
-                "package-filter",
-                &snapshot.query,
-                "Filter by name or publisher",
-                search_focus,
-                cx.listener(|this: &mut T, event: &KeyDownEvent, _window, cx| {
-                    let current = this.snapshot().query.clone();
-                    match event.keystroke.key.as_str() {
-                        "backspace" => {
-                            let mut next = current;
-                            next.pop();
-                            this.set_query(next, cx);
-                        }
-                        "escape" | "delete" => this.set_query(String::new(), cx),
-                        _ => {
-                            if let Some(typed) = event.keystroke.key_char.as_deref() {
-                                if !typed.is_empty() && !typed.chars().any(char::is_control) {
-                                    let mut next = current;
-                                    next.push_str(typed);
-                                    this.set_query(next, cx);
-                                }
-                            }
-                        }
-                    }
-                }),
-            )),
-        )
-        .child(checkbox(
+        .px(px(space::MD))
+        .bg(theme.band(crate::theme::veil::BAND_QUIET))
+        .border_b_1()
+        .border_color(theme.border)
+        .child(switch(
             theme,
             "show-system",
             snapshot.show_system,
@@ -100,20 +91,22 @@ fn toolbar<T: DebrisApp>(
             }),
         ))
         .child(div().flex_1())
-        .child(label(theme, format!("{shown} shown")))
-        .child(button(
-            theme,
-            "stage-all-visible",
-            "Stage all shown",
-            ButtonVariant::Default,
-            shown > 0,
-            cx.listener(|this: &mut T, _event: &ClickEvent, _window, cx| this.stage_all(cx)),
-        ))
+        .child(chip(theme, format!("{shown} shown"), Tone::Quiet))
+        .child(
+            button(theme, "stage-all-visible")
+                .label("Stage all shown")
+                .icon(Icon::ArrowRight)
+                .outline()
+                .disabled(empty || snapshot.is_busy())
+                .build(cx.listener(|this: &mut T, _event: &ClickEvent, _window, cx| {
+                    this.stage_all(cx)
+                })),
+        )
         .into_any_element()
 }
 
-/// The inventory column. Its own focus handle, so arrow keys move a cursor through
-/// the list without stealing focus from the search field.
+/// The table. Its own focus handle, so arrow keys move a cursor through the rows
+/// without stealing focus from the search field.
 fn inventory<T: DebrisApp>(
     theme: &Theme,
     snapshot: &Snapshot,
@@ -121,12 +114,7 @@ fn inventory<T: DebrisApp>(
     list_focus: &FocusHandle,
     cx: &mut Context<T>,
 ) -> AnyElement {
-    let mut column = div()
-        .flex()
-        .flex_col()
-        .flex_1()
-        .min_w_0()
-        .min_h_0()
+    let mut column = panel_body()
         .track_focus(list_focus)
         .on_mouse_down(
             MouseButton::Left,
@@ -134,11 +122,7 @@ fn inventory<T: DebrisApp>(
                 window.focus(this.list_focus(), cx);
             }),
         )
-        .on_key_down(list_key_handler(cx));
-
-    if snapshot.loading.is_some() {
-        column = column.child(loading_bar(theme, "inventory-loading"));
-    }
+        .on_key_down(shared::list_key_handler(cx));
 
     // Four different nothings, four different sentences. "Empty" is only truthful
     // once we know *why* it is empty.
@@ -146,32 +130,50 @@ fn inventory<T: DebrisApp>(
         error_state(
             theme,
             "The inventory could not be read",
-            &format!("{error}\nIt usually means PowerShell could not reach the Appx store. Run Rescan to try again."),
+            &format!("{error}\nPowerShell could not reach the Appx store. Rescan to try again."),
         )
-        .into_any_element()
     } else if snapshot.inventory_is_empty() && !snapshot.scanned {
         empty_state(
             theme,
+            Icon::Package,
             "No inventory yet",
-            "Press Rescan to ask Windows what is installed for this user.",
+            "Rescan asks Windows what is installed for this user. Nothing is read until you do.",
+            Some(
+                button(theme, "empty-rescan")
+                    .label("Rescan")
+                    .icon(Icon::Refresh)
+                    .primary()
+                    .build(cx.listener(|this: &mut T, _event: &ClickEvent, _window, cx| {
+                        this.scan(cx)
+                    })),
+            ),
         )
-        .into_any_element()
     } else if snapshot.inventory_is_empty() && snapshot.filter_is_active() {
         empty_state(
             theme,
+            Icon::Search,
             "Nothing matches that filter",
-            "Clear the filter to see the whole inventory again.",
+            "Clear the search field to see the whole inventory again.",
+            Some(
+                button(theme, "empty-clear-filter")
+                    .label("Clear the filter")
+                    .icon(Icon::Close)
+                    .outline()
+                    .build(cx.listener(|this: &mut T, _event: &ClickEvent, _window, cx| {
+                        this.set_query(String::new(), cx)
+                    })),
+            ),
         )
-        .into_any_element()
     } else if snapshot.inventory_is_empty() {
         empty_state(
             theme,
-            "Every package is staged",
-            "Everything this user can uninstall is in the column on the right. Nothing has been removed yet.",
+            Icon::ArrowRight,
+            "Everything is in the queue",
+            "Every package this user can uninstall is on the left. Nothing has been removed yet.",
+            None,
         )
-        .into_any_element()
     } else {
-        package_list::<T>(
+        shared::package_table::<T>(
             theme,
             "inventory",
             snapshot.inventory.clone(),
@@ -182,158 +184,6 @@ fn inventory<T: DebrisApp>(
         )
     };
 
-    column.child(body).into_any_element()
-}
-
-/// The ledger, and the confirm step. The confirm is part of the column rather than a
-/// dialog: removal is a decision worth keeping on screen, not worth interrupting for.
-fn removal<T: DebrisApp>(
-    theme: &Theme,
-    snapshot: &Snapshot,
-    root: &WeakEntity<T>,
-    cx: &mut Context<T>,
-) -> AnyElement {
-    let plan = &snapshot.plan;
-    let busy = snapshot.loading.is_some();
-
-    let header = div()
-        .flex()
-        .items_center()
-        .justify_between()
-        .h(px(layout::ROW))
-        .px_4()
-        .flex_shrink_0()
-        .border_b_1()
-        .border_color(theme.rule)
-        // The arrow is the hint that a click returns the package: it is the same
-        // gesture in reverse, so it gets the same mark.
-        .child(
-            div()
-                .flex()
-                .items_center()
-                .gap_2()
-                .text_color(theme.ink_faint)
-                .child(crate::icons::icon(Icon::ArrowLeft, 11.0))
-                .child(label(theme, "To remove")),
-        )
-        .child(
-            div()
-                .font_family(theme.font_mono.clone())
-                .text_size(px(text::SMALL))
-                .text_color(theme.ink)
-                .child(snapshot.counts.staged.to_string()),
-        );
-
-    let list: AnyElement = if snapshot.staged.is_empty() {
-        div().p_4().child(
-            div()
-                .font_family(theme.font_ui.clone())
-                .text_size(px(text::SMALL))
-                .text_color(theme.ink_muted)
-                .child("Nothing staged. Click a package to move it here."),
-        )
-        .into_any_element()
-    } else {
-        package_list::<T>(
-            theme,
-            "staged",
-            snapshot.staged.clone(),
-            snapshot.staged_names.clone(),
-            true,
-            None,
-            root,
-        )
-    };
-
-    let mut footer = div()
-        .flex()
-        .flex_col()
-        .gap_3()
-        .p_4()
-        .flex_shrink_0()
-        .bg(theme.surface_sunken)
-        .border_t_1()
-        .border_color(theme.rule_strong)
-        .child(
-            div()
-                .font_family(theme.font_ui.clone())
-                .text_size(px(text::SUBTITLE))
-                .font_weight(FontWeight::MEDIUM)
-                .text_color(if plan.is_empty() { theme.ink_muted } else { theme.ink })
-                .child(plan.headline()),
-        );
-
-    if let Some(note) = plan.caveat_note() {
-        footer = footer.child(
-            div()
-                .flex()
-                .items_start()
-                .gap_2()
-                .text_color(theme.warning)
-                .child(crate::icons::icon(Icon::Warning, 13.0))
-                .child(
-                    div()
-                        .font_family(theme.font_ui.clone())
-                        .text_size(px(text::SMALL))
-                        .child(note),
-                ),
-        );
-    }
-
-    footer = footer
-        .child(
-            div()
-                .font_family(theme.font_ui.clone())
-                .text_size(px(text::LABEL))
-                .text_color(theme.ink_muted)
-                .child("Nothing runs until you press the button."),
-        )
-        .child(
-            div()
-                .flex()
-                .items_center()
-                .gap_2()
-                .child(button(
-                    theme,
-                    "run-removal",
-                    if plan.is_empty() {
-                        "Nothing staged".to_string()
-                    } else {
-                        plan.headline()
-                    },
-                    if plan.requires_acknowledgement() {
-                        ButtonVariant::Danger
-                    } else {
-                        ButtonVariant::Primary
-                    },
-                    !plan.is_empty() && !busy,
-                    cx.listener(|this: &mut T, _event: &ClickEvent, _window, cx| {
-                        this.run_removal(cx)
-                    }),
-                ))
-                .child(button(
-                    theme,
-                    "clear-staged",
-                    "Clear",
-                    ButtonVariant::Quiet,
-                    !plan.is_empty(),
-                    cx.listener(|this: &mut T, _event: &ClickEvent, _window, cx| {
-                        this.unstage_all(cx)
-                    }),
-                )),
-        );
-
-    div()
-        .flex()
-        .flex_col()
-        .w(px(layout::REMOVAL_COLUMN))
-        .flex_shrink_0()
-        .min_h_0()
-        .bg(theme.surface_sunken)
-        .border_l_1()
-        .border_color(theme.rule)
-        .child(header)
-        .child(list)
-        .child(footer)
-        .into_any_element()
+    column = column.child(body);
+    column.into_any_element()
 }
