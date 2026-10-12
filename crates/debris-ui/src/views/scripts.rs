@@ -107,7 +107,7 @@ fn toolbar<T: DebrisApp>(
             row.child(chip_with(
                 theme,
                 Some(Icon::Alert),
-                "Preview off — running a script will change this machine",
+                "Preview off: running a script will change this machine",
                 Tone::Danger,
             ))
         })

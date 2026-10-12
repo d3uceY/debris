@@ -23,10 +23,10 @@ function Use-DebrisMode {
 
     $script:DryRunActive = $DryRun.IsPresent
     $mode = if ($script:DryRunActive) {
-        'DRY RUN - nothing will change'
+        'DRY RUN, nothing will change'
     }
     else {
-        'LIVE - changes will be applied'
+        'LIVE, changes will be applied'
     }
     Write-DebrisLine ''
     Write-DebrisLine "debris: $mode"

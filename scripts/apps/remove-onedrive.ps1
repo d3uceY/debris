@@ -5,7 +5,7 @@
 ### dry-run: yes
 ###
 ### Removes the OneDrive client, clears its scheduled task, and disables its sync
-### policy. Explorer is deliberately left running - the original script killed it,
+### policy. Explorer is deliberately left running: the original script killed it,
 ### which closes the user's windows for no benefit. Cloud files are not touched;
 ### local sync stops.
 ### credit: adapted from Debloat-Windows-10 (MIT)

@@ -6,7 +6,7 @@
 ###
 ### Clears the current user's Start tile cache so Windows rebuilds the menu with no
 ### pinned tiles on the next sign-in. No application is uninstalled and no shortcut
-### is deleted - tiles can be re-pinned by the user at any time.
+### is deleted; tiles can be re-pinned by the user at any time.
 
 [CmdletBinding()]
 param([switch]$DryRun)
@@ -21,7 +21,7 @@ $targets = @(
 
 $present = $targets | Where-Object { Test-Path -Path $_ }
 if (-not $present) {
-    Write-DebrisLine '  no tile cache to clear - the Start menu is already at its default layout'
+    Write-DebrisLine '  no tile cache to clear: the Start menu is already at its default layout'
 }
 
 foreach ($target in $present) {

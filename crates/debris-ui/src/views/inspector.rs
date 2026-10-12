@@ -137,7 +137,7 @@ fn package_detail<T: DebrisApp>(
             description_row(
                 theme,
                 "Staged",
-                if staged { "Yes — in the queue" } else { "No" },
+                if staged { "Yes, in the queue" } else { "No" },
                 false,
             ),
         ],
@@ -295,7 +295,7 @@ fn preset_detail(theme: &Theme, snapshot: &Snapshot) -> AnyElement {
         "WHAT A PRESET DOES",
         vec![prose(
             theme,
-            "Loading a preset replaces the removal queue. It never removes anything — the confirming button stays on the Packages surface.",
+            "Loading a preset replaces the removal queue. It never removes anything. The confirming button stays on the Packages surface.",
         )],
     );
 

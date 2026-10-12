@@ -6,7 +6,7 @@
 ###
 ### NOT RECOMMENDED. Sets the Defender policy key to disable real-time protection.
 ### Modern Windows enforces Tamper Protection, so this will usually be reverted by
-### the OS on its own - which means the most likely outcome is a machine that is
+### the OS on its own, which means the most likely outcome is a machine that is
 ### briefly unprotected and then protected again, with no lasting benefit. Kept in
 ### the library because the original tool shipped it, marked destructive because
 ### that is what it is.
