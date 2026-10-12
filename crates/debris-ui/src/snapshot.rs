@@ -2,12 +2,17 @@
 //!
 //! A `Snapshot` is plain data on purpose. It is what the app hands the views, so a
 //! view can be laid out for any state — loading, empty, denied — without knowing
-//! where that state came from. The two `Arc`s are the memoized derived data the
-//! skill's performance rule asks for: the filtered inventory is rebuilt when the
-//! filter changes, not once per frame, and cloning an `Arc` per frame is free.
+//! where that state came from. The `Arc`s are the memoized derived data the
+//! performance rule asks for: the filtered inventory is rebuilt when the filter
+//! changes, not once per frame, and cloning an `Arc` per frame is free.
+//!
+//! Shell geometry lives here too (`sidebar_open`, `inspector_open`). Those two bits
+//! are the *only* view state the app owns; everything else about arrangement is
+//! decided inside the views from the data below.
 
 use crate::icons::Icon;
 use debris_core::{AppxPackage, Counts, Preset, RemovalPlan, ScriptMeta};
+use std::collections::HashSet;
 use std::sync::Arc;
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -32,8 +37,19 @@ impl Screen {
     pub fn icon(self) -> Icon {
         match self {
             Screen::Packages => Icon::Package,
-            Screen::Scripts => Icon::Script,
+            Screen::Scripts => Icon::Terminal,
             Screen::Presets => Icon::Layers,
+        }
+    }
+
+    /// What the surface *contains*, as opposed to what the nav calls it. The rail
+    /// says "Packages"; the panel says "Installed packages". Two names for two jobs:
+    /// one is a place you can be, the other is a thing you can read.
+    pub fn title(self) -> &'static str {
+        match self {
+            Screen::Packages => "Installed packages",
+            Screen::Scripts => "Script library",
+            Screen::Presets => "Saved presets",
         }
     }
 
@@ -47,6 +63,15 @@ impl Screen {
                 "Audited PowerShell from the local library. Nothing runs unless you run it."
             }
             Screen::Presets => "Named sets of packages, including the Fresh Start list.",
+        }
+    }
+
+    /// The placeholder in the title bar's command shell while this surface is up.
+    pub fn hint(self) -> &'static str {
+        match self {
+            Screen::Packages => "Filter packages by name or publisher…",
+            Screen::Scripts => "Filter the library…",
+            Screen::Presets => "Find a preset…",
         }
     }
 }
@@ -95,6 +120,9 @@ impl Status {
         }
     }
 
+    pub fn is_busy(&self) -> bool {
+        matches!(self, Status::Activity(_))
+    }
 }
 
 /// Everything a frame needs.
@@ -107,12 +135,12 @@ pub struct Snapshot {
 
     /// The filtered inventory, memoized. `Staging::visible()` indexes this exactly.
     pub inventory: Arc<Vec<AppxPackage>>,
-    /// The removal column.
+    /// The removal queue — the left column, on every surface.
     pub staged: Arc<Vec<AppxPackage>>,
     /// The staged names as a set, memoized by the app. A virtualized list asks this
     /// question once per visible row per frame; a linear scan of `staged` would turn
     /// "stage all 5,000" into a quadratic frame.
-    pub staged_names: Arc<std::collections::HashSet<String>>,
+    pub staged_names: Arc<HashSet<String>>,
     pub counts: Counts,
 
     /// What the confirm step would do.
@@ -132,6 +160,13 @@ pub struct Snapshot {
     /// Scripts are previewed unless the user turns this off.
     pub dry_run: bool,
 
+    /// The left column: on by default, because the removal queue is the point of the
+    /// app and hiding it hides the thing the user came to check.
+    pub sidebar_open: bool,
+    /// The right column: off by default, because it is a second opinion rather than
+    /// the main event.
+    pub inspector_open: bool,
+
     pub status: Status,
     /// A scan in flight — the surface shows the determinate bar rather than nothing.
     pub loading: Option<String>,
@@ -143,11 +178,20 @@ pub struct Snapshot {
 }
 
 impl Snapshot {
+    pub fn new() -> Self {
+        Self {
+            sidebar_open: true,
+            inspector_open: false,
+            ..Default::default()
+        }
+    }
+
     pub fn inventory_len(&self) -> usize {
         self.inventory.len()
     }
 
-    pub fn cursor_row(&self) -> Option<&AppxPackage> {
+    /// The package under the keyboard cursor — what the inspector describes.
+    pub fn focused(&self) -> Option<&AppxPackage> {
         self.inventory.get(self.cursor)
     }
 
@@ -167,5 +211,9 @@ impl Snapshot {
 
     pub fn filter_is_active(&self) -> bool {
         !self.query.trim().is_empty()
+    }
+
+    pub fn is_busy(&self) -> bool {
+        self.loading.is_some()
     }
 }
