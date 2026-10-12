@@ -5,8 +5,6 @@ the current user, lets you stage a set for removal, and removes them. It also ru
 audited PowerShell maintenance scripts from a local library, previewing each one
 before it runs.
 
-See [PRODUCT.md](PRODUCT.md) for the brief and [DESIGN.md](DESIGN.md) for the design system.
-
 ## Status
 
 Early. The package inventory, staging ledger, script library, presets, and the full
