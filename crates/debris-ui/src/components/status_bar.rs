@@ -1,85 +1,191 @@
 //! The bottom edge.
 //!
 //! One line, always in the same place. The original tool reported results in modal
-//! dialogs; a fixed status line means the answer to "what just happened" is never
+//! dialogs; a fixed status rail means the answer to "what just happened" is never
 //! something the user has to dismiss or remember.
+//!
+//! It is built from **segments**, not messages: a label and a value, separated by a
+//! hairline. The left segment is the only one that changes width, so the right side
+//! never moves.
 
+use crate::components::{divider, pulse_dot};
 use crate::icons::{Icon, icon};
 use crate::snapshot::{Status, StatusTone};
-use crate::theme::{Theme, layout, text};
-use gpui::{IntoElement, div, prelude::*, px};
+use crate::theme::{Theme, metrics, radius, space, text};
+use gpui::{AnyElement, IntoElement, ParentElement, Rgba, SharedString, div, prelude::*, px};
 
+/// One label/value pair on the rail.
+pub fn segment(theme: &Theme, label: &str, value: impl Into<SharedString>, dot: Option<Rgba>) -> AnyElement {
+    let mut row = div()
+        .flex()
+        .flex_row()
+        .items_center()
+        .gap(px(space::XS))
+        .flex_shrink_0();
+
+    if let Some(color) = dot {
+        row = row.child(div().w(px(5.0)).h(px(5.0)).flex_shrink_0().rounded_full().bg(color));
+    }
+    row.child(
+        div()
+            .text_size(px(text::LABEL))
+            .text_color(theme.muted_foreground)
+            .child(label.to_string()),
+    )
+    .child(
+        div()
+            .text_size(px(text::LABEL))
+            .font_family(theme.font_mono.clone())
+            .text_color(theme.foreground)
+            .child(value.into()),
+    )
+    .into_any_element()
+}
+
+/// A segment that is a control: it carries its own hover and click.
+pub fn segment_button(theme: &Theme, id: &str, label: &str, value: impl Into<SharedString>, active: bool) -> AnyElement {
+    let color = if active {
+        theme.foreground
+    } else {
+        theme.muted_foreground
+    };
+    // Hover closures are `'static`; copy the fill out of the theme first.
+    let hover_fill = theme.band(crate::theme::veil::BAND);
+    let active_fill = theme.band(crate::theme::veil::BAND);
+    div()
+        .id(id.to_string())
+        .flex()
+        .flex_row()
+        .items_center()
+        .gap(px(space::XS))
+        .h(px(metrics::STATUS_BAR - 8.0))
+        .px(px(6.0))
+        .flex_shrink_0()
+        .rounded(px(4.0))
+        .text_color(color)
+        .cursor_pointer()
+        .when(active, move |el| el.bg(active_fill))
+        .hover(move |style| style.bg(hover_fill))
+        .child(
+            div()
+                .text_size(px(text::LABEL))
+                .child(label.to_string()),
+        )
+        .child(
+            div()
+                .text_size(px(text::LABEL))
+                .font_family(theme.font_mono.clone())
+                .child(value.into()),
+        )
+        .into_any_element()
+}
+
+/// The rail itself.
+///
+/// `left` is the changing message; `right` is the fixed set of state segments. The
+/// message is truncated rather than wrapped, so the rail keeps its 26px.
 pub fn status_bar(
     theme: &Theme,
     status: &Status,
     elevated: Option<bool>,
     reduce_motion: bool,
-) -> impl IntoElement {
-    let (dot, text_color) = match status.tone() {
-        StatusTone::Neutral => (theme.ink_faint, theme.ink_muted),
-        StatusTone::Good => (theme.success, theme.ink),
-        StatusTone::Caution => (theme.warning, theme.ink),
-        StatusTone::Bad => (theme.accent, theme.accent),
+    busy: bool,
+) -> AnyElement {
+    let (dot, message_color) = match status.tone() {
+        StatusTone::Neutral => (theme.muted_foreground, theme.foreground),
+        StatusTone::Good => (theme.success, theme.foreground),
+        StatusTone::Caution => (theme.warning, theme.foreground),
+        StatusTone::Bad => (theme.danger, theme.danger),
     };
 
-    let (elevation_label, elevation_color) = match elevated {
-        Some(true) => ("Administrator", theme.ink),
-        Some(false) => ("Standard user", theme.ink_faint),
-        None => ("Elevation not checked", theme.ink_faint),
+    let (elevation_label, elevation_color, elevation_mark) = match elevated {
+        Some(true) => ("Administrator", theme.foreground, Icon::Shield),
+        Some(false) => ("Standard user", theme.muted_foreground, Icon::Shield),
+        None => ("Elevation not checked", theme.muted_foreground, Icon::Shield),
+    };
+
+    let dot_element: AnyElement = if busy {
+        pulse_dot(theme, "status-pulse", theme.primary)
+    } else {
+        div().w(px(6.0)).h(px(6.0)).flex_shrink_0().rounded_full().bg(dot).into_any_element()
     };
 
     div()
         .flex()
+        .flex_row()
         .items_center()
-        .justify_between()
-        .gap_4()
-        .h(px(layout::STATUS_BAR))
-        .px_4()
+        .gap(px(space::MD))
+        .h(px(metrics::STATUS_BAR))
+        .w_full()
+        .px(px(space::MD))
         .flex_shrink_0()
-        .bg(theme.surface)
+        .bg(theme.background)
         .border_t_1()
-        .border_color(theme.rule)
+        .border_color(theme.border)
+        // — left: what just happened —
         .child(
             div()
                 .flex()
+                .flex_row()
                 .items_center()
-                .gap_2()
+                .gap(px(space::SM))
+                .flex_1()
                 .min_w_0()
-                .child(div().w(px(6.0)).h(px(6.0)).bg(dot))
+                .child(dot_element)
                 .child(
                     div()
+                        .min_w_0()
+                        .truncate()
                         .font_family(theme.font_ui.clone())
                         .text_size(px(text::SMALL))
-                        .text_color(text_color)
-                        .truncate()
+                        .text_color(message_color)
                         .child(status.text().to_string()),
                 ),
         )
+        // — right: the state of the machine, fixed —
         .child(
             div()
                 .flex()
+                .flex_row()
                 .items_center()
-                .gap_2()
+                .gap(px(space::MD))
                 .flex_shrink_0()
-                .text_color(elevation_color)
-                .child(icon(Icon::Shield, 12.0))
                 .child(
                     div()
-                        .font_family(theme.font_ui.clone())
+                        .flex()
+                        .flex_row()
+                        .items_center()
+                        .gap(px(space::XS))
+                        .flex_shrink_0()
+                        .child(icon(elevation_mark, 12.0, elevation_color))
+                        .child(
+                            div()
+                                .text_size(px(text::LABEL))
+                                .child(elevation_label.to_string()),
+                        ),
+                )
+                .child(divider(theme))
+                .child(
+                    div()
+                        .font_family(theme.font_mono.clone())
                         .text_size(px(text::LABEL))
-                        .child(elevation_label.to_string()),
+                        .text_color(theme.muted_foreground)
+                        .child(if reduce_motion { "motion off" } else { "motion on" }),
                 ),
         )
-        .child(
-            div()
-                .flex_shrink_0()
-                .font_family(theme.font_ui.clone())
-                .text_size(px(text::LABEL))
-                .text_color(theme.ink_faint)
-                .child(if reduce_motion {
-                    "Motion: reduced".to_string()
-                } else {
-                    "Motion: full".to_string()
-                }),
-        )
+        .into_any_element()
+}
+
+/// A keycap-shaped reminder used in a panel footer, styled to match the rail.
+pub fn footer_hint(theme: &Theme, text_content: impl Into<SharedString>) -> AnyElement {
+    div()
+        .flex()
+        .flex_row()
+        .items_center()
+        .gap(px(space::XS))
+        .text_size(px(text::LABEL))
+        .text_color(theme.muted_foreground)
+        .rounded(px(radius::CHIP))
+        .child(text_content.into())
+        .into_any_element()
 }
