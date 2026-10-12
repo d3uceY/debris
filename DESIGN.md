@@ -3,124 +3,232 @@
 ## World
 
 ```
-BRAND ESSENCE:     exacting
-VISUAL TENSION:    clinical white expanse ↔ one signal-red accent;
-                   dense monospaced data ↔ generous margins
-SIGNATURE MOMENT:  the staging ledger — a row leaves the inventory column and
-                   arrives in the removal column across a hairline rule, while
-                   the count ticks over in tabular figures
-FRAMEWORK AMBITION: a virtualized inventory (`uniform_list`) that holds its frame
-                   at several thousand rows, and an SVG icon set tinted from one
-                   ink token
+BRAND ESSENCE:     instrument
+VISUAL TENSION:    near-monochrome tool surface ↔ one red signal that means "this is leaving"
+SIGNATURE MOMENT:  the removal queue — a row crosses the hairline out of the table
+                   into the left column, the mark becomes a check, the wash goes red,
+                   and the count in the column header ticks over
+FRAMEWORK AMBITION: a four-zone shell where each zone owns its own scroll, three of
+                   them bands at exactly the same height, and the table virtualizes
+                   to five thousand rows without the frame noticing
 ```
 
-**Stance: light.** The scene decides it (see PRODUCT.md) — a deliberate maintenance
-task at a desk in daylight, lasting minutes. Dark tokens exist and the components
-read from tokens only, so the appearance is switchable, but light is the default.
+**Stance: both, light is the default.** The scene is a desk in daylight, so light leads
+— but the dark set is derived from the same roles, not inverted from the light one,
+and every screen is built from tokens only. Both are first-class; neither is a theme
+someone bolted on.
 
-**Mode: Operate.** This is a task surface. Familiarity is a feature. The tool should
-disappear into the job; expression is spent on the ledger and on nothing else.
+**Mode: Operate.** This is a task surface. The reference point is a database client, not
+a landing page: dense rows, mono data, bands that align, and a shell the eye stops
+noticing after ten seconds. Expression is spent on the queue and on the inspector —
+the two places where the user has to *understand* something — and nowhere else.
 
-## The Swiss deviation — read this before "fixing" it
+## The lineage — read this before "fixing" it
 
-The craft floor's defaults for raised surfaces (12–16px radii, soft shadows, cards)
-are **deliberately not used**. The brief is Swiss/International Typographic Style:
-structure comes from the grid, the rule, and the type — never from a container's
-padding and shadow. So, in this project:
+The visual language is the shadcn/Tailwind **neutral** scale, as used by the desktop
+client this shell is modelled on. Three consequences, all deliberate:
 
-- **Radii are ~0.** Containers are square (`rounded_none`). Controls get 2px. Pills are never used.
-- **There are no shadows.** Elevation is not a thing here; separation is a hairline rule and whitespace.
-- **Declare structure once.** A 1px rule `or` a background change — never a border *and* a shadow *and* a background tint.
-- **The one accent is red and it means "this will be removed / this is dangerous."** It is never decorative. Nothing else in the interface is colored.
+- **Depth is opacity, not shadow.** There is exactly one shadow in the app, under the
+  tooltip, and it exists because a tooltip floats over arbitrary content. Everything
+  else separates by laying one token over another at a named fraction: a header band,
+  a toolbar, a hovered row, a chip and a table rule are all `muted` at different
+  values. See [The veil ladder](#the-veil-ladder).
+- **Radii are a scale, not a style.** 5 for a chip, 6 for a control or an input, 8 for
+  a rail button, 10 for an empty state's tile. Containers are not rounded.
+- **Colour is a vocabulary, not decoration.** Publishers, versions, counts and labels
+  are all grey. Red means removal. Amber means "Windows needs this". Green means done.
+  If a new colour appears in a leaf component without a semantic reason, that is the
+  bug.
+
+## The shell
+
+Four zones, three of them toggleable, on a 36px / 26px sandwich:
+
+```
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 36   mark · surface        [ search ]        appearance · panels · Rescan    │
+├──────┬──────────────────────────┬──────────────────────────┬─────────────────┤
+│ 48   │ 304                      │ center dock              │ 300             │
+│ rail │ removal queue            │ 38 header                │ inspector       │
+│      │ 38 header                │ 30 toolbar               │ 38 header       │
+│      │ rows                     │ 26 column header         │ groups          │
+│      │ footer (the confirm)     │ rows                     │                 │
+├──────┴──────────────────────────┴──────────────────────────┴─────────────────┤
+│ 26  ● what just happened        │ elevation │ motion                          │
+└──────────────────────────────────────────────────────────────────────────────┘
+```
+
+**Rules that hold it together**
+
+1. **Each zone owns its own scroll.** The rail, the queue, the table and the inspector
+   are four independent scroll regions. The shell itself never scrolls; `min_h_0` on
+   every flex ancestor is what makes that true rather than aspirational.
+2. **Bands align.** The queue header, the panel header, and the inspector header are all
+   38px on the same hairline. That alignment is the entire reason four regions read as
+   one window instead of four panels.
+3. **One search field.** The filter lives in the title bar and applies to whichever
+   surface is up. A second, per-screen copy of the same field is how a shell starts
+   contradicting itself.
+4. **The queue is not screen-dependent.** Staging is the only state that outlives the
+   surface you are standing on. Putting it behind a tab means a preset loaded on one
+   screen silently scrolls out of sight on another.
+5. **The inspector is off by default.** It is a second opinion, not the main event. The
+   rail and the status bar are where you turn it on.
 
 ## Type
 
 | Role | Family | Notes |
 |---|---|---|
-| Display + UI | **Arial** (Helvetica lineage) | The Swiss grotesque. `Neue Haas Grotesk`, `Inter`, or `Helvetica Now` are drop-in upgrades — change `Theme::font_ui` only. |
-| Data + identifiers | **Consolas** | Package names, versions, counts, paths. Monospace is for data and measurement, which is exactly what this is. |
+| Display + UI | **Segoe UI** | The platform's own grotesque, present on every Windows machine. Nothing is bundled, so `Theme::font_ui` is the single field to change to move onto a downloaded face. |
+| Data + identifiers | **Consolas** | Package names, versions, counts, keys, paths. Every identity this app shows is an identifier, so mono is the default for data rather than a flourish. |
 
 Scale (fixed px — desktop at fixed DPI):
 
 | Token | Size | Use |
 |---|---|---|
-| `display` | 34 | The one headline per surface |
-| `title` | 20 | Section headings |
-| `body` | 14 | Everything |
-| `small` | 12 | Metadata, row secondaries |
-| `label` | 11 | Uppercase section labels, `letter_spacing` widened |
+| `subtitle` | 14 | A panel title, a row title, the confirm line |
+| `body` | 13 | The base: row text, prose |
+| `small` | 12 | Table cells, captions, footnotes |
+| `label` | 11 | Chips, section eyebrows, column headers, the status rail |
 
-Rules: flush left, ragged right — never centered body text. Type carries hierarchy,
-so headings get weight and space, not a colored box. Tabular figures for every count
-that changes.
+**There is no display size.** This is the deliberate departure from the previous
+revision of this file, which set 34px headlines over each surface. A tool that shouts its
+own name at you on every screen is spending the top of its type scale on nothing. The
+largest type in the app is a 14px panel title or a 14px confirm line; hierarchy comes
+from weight, colour, and *position* instead.
 
-> **GPUI limitation, worth knowing before you plan tracking.** `TextStyle` has no
-> `letter_spacing`, so the widened tracking this style usually wants on uppercase
-> labels is not available. Uppercase labels are set small and in `SEMIBOLD` instead,
-> which separates them from body text on weight rather than on tracking. Do not
-> specify tracking in a spec you cannot implement.
+Rules: flush left, ragged right. Every count that changes is mono, so it does not
+jitter as it ticks. Nothing is centred except an empty state and a status message.
 
-## Color
+## Colour
 
-Derived from one ink hue on a true white field. Light:
+The neutral ramp, light → dark:
 
-| Token | Value | Role |
+| Token | Light | Dark | Role |
+|---|---|---|---|
+| `background` | `#FFFFFF` | `#0A0A0A` | The page: center dock, inspector |
+| `title_bar` | `#F8F8F8` | `#171717` | The top band |
+| `sidebar` | `#FAFAFA` | `#0A0A0A` | The rail and the queue |
+| `sidebar_accent` | `#E5E5E5` | `#262626` | The selected rail button, the selected nav row |
+| `foreground` | `#0A0A0A` | `#FAFAFA` | Text |
+| `muted_foreground` | `#737373` | `#A3A3A3` | Everything secondary |
+| `border` | `#E5E5E5` | `#262626` | Structural hairlines |
+| `input` | `#D4D4D4` | `#2F2F2F` | A control's resting edge |
+| `muted` | `#F5F5F5` | `#262626` | The one band/hover fill |
+| `primary` | `#171717` | `#FAFAFA` | The one committing action |
+| `danger` | `#DC2626` | `#F87171` | Removal, as text |
+| `warning` | `#B45309` | `#FBBF24` | System-critical |
+| `success` | `#15803D` | `#4ADE80` | Confirmed |
+
+Two text colours, not three. The previous revision carried a third "faint" grey that
+measured 2.5:1 on white — used for real labels, which made them unreadable. Anything
+that needs to read is `foreground` or `muted_foreground`, and both clear 4.5:1 on every
+surface they are allowed to sit on. Opacity is for *fills, rules and icon strokes* — the
+things nobody has to read.
+
+### The veil ladder
+
+Colours never appear as one-offs. `veil::*` names the fractions so that a header band in
+the queue and a header band in the dock are the same value by construction:
+
+| Name | Value | Used for |
 |---|---|---|
-| `surface` | `#FFFFFF` | The page |
-| `surface_sunken` | `#F6F6F6` | The staging column, the sidebar |
-| `surface_hover` | `#F0F0F0` | Row hover |
-| `surface_selected` | `#E8E8E8` | Row selected |
-| `ink` | `#111111` | Primary text |
-| `ink_muted` | `#5C5C5C` | Secondary (4.5:1+ on white) |
-| `ink_faint` | `#8A8A8A` | Tertiary, non-essential only |
-| `rule` | `#DFDFDF` | Hairlines — the only separator |
-| `rule_strong` | `#B4B4B4` | Column edges |
-| `accent` | `#D92D20` | Removal / danger. Nothing else. |
-| `accent_text` | `#FFFFFF` | Text on accent |
-| `warning` | `#B25E09` | Caution risk |
-| `success` | `#1F7A3D` | Completed |
+| `BAND` | 0.22 | The toolbar, the icon rail's hover, a ghost button's hover |
+| `BAND_QUIET` | 0.14 | A panel header, a column header — the quieter top strip |
+| `CHIP` | 0.34 | A chip's own fill, an empty state's tile |
+| `HAIRLINE` | 0.72 | A panel's own edge, one step softer than `border` |
+| `ROW_RULE` | 0.55 | The rule between rows, because there are many of them |
+| `ICON` | 0.9 | A decorative icon's stroke |
 
-Dark mirrors the same roles on ink surfaces (`#0E0E0E` page, `#F2F2F2` ink); the
-accent lifts to `#FF5A4D` to hold ≥ 4.5:1 against the dark surface.
+## Space and geometry
 
-Contrast is computed from these values, not eyeballed. Nothing assumes white.
+A 4px ladder, used at these steps only: `4 8 12 16 24 32`.
 
-## Space
+Structural heights are constants, not judgement calls. `theme::metrics` is the list, and
+the numbers that matter are `TITLE_BAR 36`, `PANEL_HEADER 38`, `TOOLBAR 30`,
+`COLUMN_HEADER 26`, `ROW 30`, `CONTROL 28`, `ICON_RAIL 48`, `SIDEBAR 304`,
+`INSPECTOR 300`, `STATUS_BAR 26`.
 
-A 4px ladder, used at these steps only: `4 8 12 16 24 32 48 64`. Gaps between
-siblings, never stacked margins. More space above a heading than below it. Dense
-inside rows (12px vertical), generous between regions (32–48px).
+The panel header is 38 because it carries **two lines, always**: a title and a subtitle.
+A header that can only fit one line forces every panel to choose between naming itself
+and saying anything useful — which is how you end up with a screen called "Packages" and
+no idea how many there are.
 
-Grid: a fixed 232px rail and a fluid content column, content capped at 1120px,
-48px gutters. Structure is visible as hairlines, not as boxes.
+## The seven shapes
 
-## Components
+There are seven shapes in this interface and nothing else. If a screen needs an eighth,
+that is a design decision, not an implementation detail.
 
-- **`Rule`** — the 1px hairline. The primary structural device in this interface.
-- **`Button`** — square, 2px radius. Variants: `Default` (ink rule, transparent), `Primary` (ink fill), `Danger` (accent fill), `Quiet` (no rule until hover).
-- **`PackageRow`** — mono name, muted publisher, 32px tall, hairline beneath, hover + selected states, keyboard focus ring.
-- **`Stat`** — a tabular count over an uppercase label. The only numbers that get size.
-- **`RiskTag`** — uppercase 11px, category-colored. The only place color appears besides removal.
-- **`StatusBar`** — the bottom edge: what just happened, in one line, never a toast.
-- **`Icon`** — 16px SVG, tinted from the surrounding text color. One stroke weight, one visual language, no unicode-as-icon.
+- **Band** — a full-width tinted strip separating two regions. The only depth device.
+- **Rule** — hairline separation inside a region. Not a border on a container: a list is
+  a stack of rules, not a card with padding.
+- **Row** — the unit of every list. Four slots: a fixed **lead** (mark), a flexible
+  **name**, fixed **meta** columns, and a `flex_shrink_0` **trailing** slot. A row
+  without a mark still reserves the lead slot so labels align down the column. Rows are
+  `w_full` — without it a row is content-sized and every fixed column drifts.
+- **Chip** — a badge, a keycap, a count. 18px tall, 5px radius, 11px type.
+- **Panel header** — a title strip. A title *and* a subtitle, always.
+- **Empty state** — a 42px tile with a mark, a title, a sentence, optional action. The
+  sentence teaches what the surface is for; it never apologises.
+- **Control** — button, field, switch. Four button variants: `Primary` (the one
+  committing action), `Outline`, `Ghost`, `Danger`; plus `DangerGhost` for a destructive
+  escape.
+
+Two shapes that are deliberately **not** used: the card (a row plus a rule is enough)
+and the modal (the confirm lives in the queue's footer, where it stays readable instead
+of being dismissed).
+
+## Icons
+
+Every icon is a stroked outline on a 24-unit grid: `fill="none"`, `stroke="#000"`,
+`stroke-width="2"`, round caps and joins. They live in `assets/icons/` and are resolved
+through the app's `AssetSource`.
+
+**GPUI paints an SVG as an alpha mask** — it rasterises the file and fills the mask with
+a colour. The drawing's own colours are irrelevant; only its alpha survives. And that
+colour is **not inherited**: `Interactivity::paint` computes an element's style from its
+own refinement alone and hands *that* to the painter, while the inherited text style sits
+in a separate window-level stack that only text elements read. An `Svg` inside a
+`text_color(..)` parent has `text.color == None`, and `Svg::paint` then does nothing at
+all — a silently invisible icon, with no error anywhere.
+
+So `icons::icon(mark, size, color)` takes the colour as a required argument. That is not
+ceremony; it is the only thing that works. Any new icon call site passes a colour.
 
 ## Motion
 
-**One authored moment per surface**, not a fade on everything:
+**One authored moment, nothing else.** The queue is the moment: a row arrives with the
+removal wash and the header count changes. Everything else is instant, because instant
+reads as precise and latency reads as sloppy.
 
-- The ledger transfer: the row's background resolves to accent-tinted and the count
-  ticks — `120ms`, `ease_out_quint`.
-- No motion on hover or scroll. Instant reads as precise; latency reads as sloppy.
+The only two animations in the app are the indeterminate loading bar (a rule that pulses
+between 0.2 and 1.0 opacity) and the busy dot in the status rail. Both are gated on
+`Theme::reduce_motion`, because GPUI has no `prefers-reduced-motion`; the app exposes a
+setting and the theme carries it.
 
-Everything is gated on a `reduce_motion` flag in the theme, because GPUI has no
-`prefers-reduced-motion`. Non-essential motion stops when it is set; state changes
-still read through color and rule weight.
+There are no element transforms to animate with. GPUI's styling API has no `transform`,
+so the switch's knob travels by changing the row's justification, not by translating —
+the state change is instant and the *colour* carries the feedback.
 
 ## States
 
-Every data surface designs: `Loading` (a rule-width determinate bar, never a spinner),
-`Empty` (teaches what the surface is for), `Error` (names the problem and the recovery,
-in the product's own voice), `Denied` (not elevated, with the way to become elevated).
-Disabled controls stay legible rather than fading to invisibility.
+Every data surface designs all of them:
 
-Coverage: no target below 28px; the keyboard reaches every action the mouse can.
+- **Loading** — a rule-width bar under the column header, never a spinner in the middle
+  of content that is about to arrive.
+- **Empty** — four different nothings, four different sentences: not scanned yet,
+  filtered to nothing, everything already staged, and the library genuinely absent. "No
+  results" is only truthful once you know *which* nothing it is.
+- **Error** — names the problem and the recovery, in the product's own voice, with the
+  raw PowerShell error quoted rather than paraphrased.
+- **Disabled** — stays legible. A disabled control keeps its edge and its label and
+  gives up only its weight.
+- **Keyboard** — the table has a cursor, `↑`/`↓` move it, `Enter` stages. The inspector's
+  shortcut list only makes promises the table keeps.
+
+## Coverage audit
+
+No target below 22px; every interactive target is at least 28px except the icon buttons
+in the title bar and the field's clear affordance, which are 22 and 16. Contrast is
+computed from the token values above, not eyeballed. Light and dark are both rendered
+and inspected; nothing assumes a light background.

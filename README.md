@@ -35,8 +35,9 @@ debris-app ──► debris-backend ──► debris-core
 ```
 
 - **`debris-core`** — `model`, `catalog` (what counts as system-critical), `staging`
-  (the two-column ledger), `preset`, `script` (the `###` header contract), `plan`
-  (turning a staging set into executable steps), `error`. No IO, no `std::process`,
+  (the two-partition staging model the removal queue is a view of), `preset`, `script`
+  (the `###` header contract), `plan` (turning a staging set into executable steps),
+  `error`. No IO, no `std::process`,
   no GPUI. Everything here is unit-testable in microseconds.
 - **`debris-backend`** — the PowerShell boundary, behind one trait. `CommandRunner`
   has a real implementation (spawns `powershell.exe`), a `DryRun` implementation,
