@@ -1,17 +1,19 @@
 //! The text field.
 //!
 //! GPUI ships no text input, so this is the real thing: a focus handle the app owns,
-//! a visible focus edge, an I-beam cursor, and a clear affordance. Key handling is
-//! delegated to the caller, which owns the string — the field never holds state.
+//! a visible focus edge, a blinking caret at the insertion point, an I-beam cursor,
+//! and a clear affordance. Key handling is delegated to the caller, which owns the
+//! string — the field never holds state.
 //!
 //! The face is monospace because what goes in it is always an identifier.
 
 use crate::icons::{Icon, icon};
 use crate::theme::{Theme, metrics, radius, space, text};
 use gpui::{
-    AnyElement, App, ClickEvent, CursorStyle, FocusHandle, IntoElement, KeyDownEvent, MouseButton,
-    MouseDownEvent, Window, div, prelude::*, px,
+    Animation, AnimationExt, AnyElement, App, ClickEvent, CursorStyle, Div, FocusHandle,
+    IntoElement, KeyDownEvent, MouseButton, MouseDownEvent, Window, div, prelude::*, px,
 };
+use std::time::Duration;
 
 pub fn text_field<F, G>(
     theme: &Theme,
@@ -72,14 +74,27 @@ where
         .child(icon(Icon::Search, crate::icons::INLINE, theme.muted_foreground))
         .child(
             div()
+                .flex()
+                .flex_row()
+                .items_center()
+                .gap(px(2.0))
                 .flex_1()
                 .min_w_0()
-                .truncate()
-                .child(if empty {
-                    placeholder.to_string()
-                } else {
-                    value.to_string()
-                }),
+                // The caret sits at the insertion point. With nothing typed that is
+                // column zero, ahead of the placeholder; once there is text it trails
+                // the text, because this field only ever appends and backspaces.
+                .when(empty, |row| row.child(caret(theme, focus, id)))
+                .child(
+                    div()
+                        .min_w_0()
+                        .truncate()
+                        .child(if empty {
+                            placeholder.to_string()
+                        } else {
+                            value.to_string()
+                        }),
+                )
+                .when(!empty, |row| row.child(caret(theme, focus, id))),
         )
         .when(show_clear, |row| {
             row.child(
@@ -99,4 +114,42 @@ where
             )
         })
         .into_any_element()
+}
+
+/// The insertion point, as a 1px rule.
+///
+/// `in_focus` is the whole trick: GPUI resolves focus refinements during `paint`,
+/// against whichever handle the window is holding, so the caret appears and vanishes
+/// with the focus itself. No flag in the app, no re-render, and blur is correct even
+/// when focus leaves by a route with no handler behind it, such as tabbing away.
+///
+/// A caveat worth writing down: `in_focus_style` is only read when the element tracks
+/// a handle of its own, so the wrapper has to call `track_focus`. Reusing the field's
+/// handle costs nothing — a handle is ref-counted, not duplicated.
+fn caret(theme: &Theme, focus: &FocusHandle, id: &str) -> Div {
+    let bar = div()
+        .w(px(1.0))
+        .h(px(14.0))
+        .flex_shrink_0()
+        .bg(theme.foreground);
+
+    // A caret is on or off rather than fading, so the wave is squared off. The id is
+    // not decoration: an animation is keyed, and an unkeyed one restarts every frame.
+    let bar: AnyElement = if theme.reduce_motion {
+        bar.into_any_element()
+    } else {
+        bar.with_animation(
+            format!("{id}-caret"),
+            Animation::new(Duration::from_millis(1000)).repeat(),
+            |bar, delta| bar.opacity(if delta < 0.5 { 1.0 } else { 0.0 }),
+        )
+        .into_any_element()
+    };
+
+    div()
+        .flex_shrink_0()
+        .track_focus(focus)
+        .opacity(0.0)
+        .in_focus(|style| style.opacity(1.0))
+        .child(bar)
 }
