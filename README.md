@@ -5,8 +5,6 @@ the current user, lets you stage a set for removal, and removes them. It also ru
 audited PowerShell maintenance scripts from a local library, previewing each one
 before it runs.
 
-A ground-up reimplementation of [Bloatbox](https://github.com/builtbybel/bloatbox),
-rebuilt on GPUI with a stricter safety model and a different interface.
 See [PRODUCT.md](PRODUCT.md) for the brief and [DESIGN.md](DESIGN.md) for the design system.
 
 ## Status
