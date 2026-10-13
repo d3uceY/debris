@@ -103,6 +103,31 @@ cargo test --release -p debris-backend --test perf -- --nocapture
 The policy tests parse the real scripts with PowerShell's parser. **No script is
 ever executed by the test suite**, and no test mutates the system.
 
+## Release
+
+Push a tag, and that tag *is* the release:
+
+```sh
+git tag v0.1.2
+git push origin v0.1.2
+```
+
+Nothing computes a version. The workflow reads `v0.1.2` off the tag, stamps `0.1.2` into
+`[workspace.package].version`, builds on `windows-latest`, and attaches one zip — the exe
+with the `assets/` and `scripts/` it reads off disk — to a GitHub Release tagged `v0.1.2`.
+That same `0.1.2` is what the app puts in the status rail and what Windows shows in the
+exe's properties, so the tag, the release and the binary can never disagree.
+
+To release a commit you have not tagged, run **Release → Run workflow** from the Actions
+tab and give it a version; the tag is created at the commit the run started from.
+
+Tags must be `v<major>.<minor>.<patch>`. The version in the checked-in `Cargo.toml` is
+only what a *local* build calls itself — the release always uses the tag, so there is
+nothing to bump before you tag.
+
+Windows is the only target, and GitHub Releases is the only destination: there is no
+Homebrew cask, no winget manifest, no update server.
+
 ## License
 
 Apache-2.0. See [LICENSE](LICENSE).

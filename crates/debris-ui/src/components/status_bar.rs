@@ -8,11 +8,21 @@
 //! hairline. The left segment is the only one that changes width, so the right side
 //! never moves.
 
+use crate::components::divider;
 use crate::components::pulse_dot;
 use crate::icons::{Icon, icon};
 use crate::snapshot::{Status, StatusTone};
 use crate::theme::{Theme, metrics, space, text};
 use gpui::{AnyElement, IntoElement, ParentElement, Rgba, SharedString, div, prelude::*, px};
+
+/// The build this window is.
+///
+/// Every crate in the workspace takes its version from `[workspace.package]`, so this
+/// is the app's version too, and it is the same number the release tag carries: the
+/// release workflow stamps the tag's CalVer into the manifest before it builds, and a
+/// local build is simply the version checked into that manifest. That is deliberate —
+/// *"which build is this?"* has one answer, and it is the tag.
+pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 /// One label/value pair on the rail.
 pub fn segment(theme: &Theme, label: &str, value: impl Into<SharedString>, dot: Option<Rgba>) -> AnyElement {
@@ -124,6 +134,16 @@ pub fn status_bar(
                                 .text_size(px(text::LABEL))
                                 .child(elevation_label.to_string()),
                         ),
+                )
+                // The build identity sits hard right, past the state segments: it is
+                // the one thing on the rail that never changes while the app is open.
+                .child(divider(theme))
+                .child(
+                    div()
+                        .font_family(theme.font_mono.clone())
+                        .text_size(px(text::LABEL))
+                        .text_color(theme.muted_foreground)
+                        .child(format!("v{VERSION}")),
                 ),
         )
         .into_any_element()

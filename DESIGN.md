@@ -227,10 +227,9 @@ The identity is the logo, not a drawn glyph: `assets/logo.png`, a Windows flag c
 apart. It is the product in one picture, which is why it holds the one slot the
 near-monochrome rule does not reach — 20px at the left of the title bar.
 
-It is a **raster drawn with `img`, not an SVG drawn with `svg`,** and that is the reason
-the second rule about the mark exists. `svg` would mask the file down to a single
-colour; this mark is two inks, and the blue is the point — it is the flag, and the flag
-is what is being taken apart.
+It is a **raster drawn with `img`, not an SVG drawn with `svg`.** The `svg` element would
+mask the file down to a single colour, and this mark is two inks — the blue is the point,
+because it is the flag, and the flag is what is being taken apart.
 
 The file also ships **already keyed off its page colour** (the master sat on a `#F4F4F4`
 page). A logo carrying its own background has to sit on a tile or match the band behind
