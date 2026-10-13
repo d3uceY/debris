@@ -3,8 +3,8 @@
 //! A boxed region in this interface is three horizontal bands and a body:
 //!
 //! ```text
-//!   ┌── panel_header ── 34px ── title + subtitle + actions ────────┐
-//!   ├── toolbar ─────── 30px ── controls ──────────────────────────┤
+//!   ┌── panel_header ── 44px ── title + subtitle + actions ────────┐
+//!   ├── toolbar ─────── 36px ── controls ──────────────────────────┤
 //!   │  body              flex_1, min_h_0, scrolls or virtualizes    │
 //!   ├── panel_footer ────────── the one action that concludes it ──┤
 //!   └───────────────────────────────────────────────────────────────┘

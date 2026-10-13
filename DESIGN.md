@@ -49,8 +49,8 @@ Four zones, three of them toggleable, on a 36px / 26px sandwich:
 │ 36   mark · surface        [ search ]        appearance · panels · Rescan    │
 ├──────┬──────────────────────────┬──────────────────────────┬─────────────────┤
 │ 48   │ 304                      │ center dock              │ 300             │
-│ rail │ removal queue            │ 38 header                │ inspector       │
-│      │ 38 header                │ 30 toolbar               │ 38 header       │
+│ rail │ removal queue            │ 44 header                │ inspector       │
+│      │ 44 header                │ 36 toolbar               │ 44 header       │
 │      │ rows                     │ 26 column header         │ groups          │
 │      │ footer (the ask)         │ rows                     │                 │
 ├──────┴───────────────────────────┴──────────────────────────┴─────────────────┤
@@ -64,7 +64,7 @@ Four zones, three of them toggleable, on a 36px / 26px sandwich:
    are four independent scroll regions. The shell itself never scrolls; `min_h_0` on
    every flex ancestor is what makes that true rather than aspirational.
 2. **Bands align.** The queue header, the panel header, and the inspector header are all
-   38px on the same hairline. That alignment is the entire reason four regions read as
+   44px on the same hairline. That alignment is the entire reason four regions read as
    one window instead of four panels.
 3. **One search field.** The filter lives in the title bar and applies to whichever
    surface is up. A second, per-screen copy of the same field is how a shell starts
@@ -145,11 +145,14 @@ the queue and a header band in the dock are the same value by construction:
 A 4px ladder, used at these steps only: `4 8 12 16 24 32`.
 
 Structural heights are constants, not judgement calls. `theme::metrics` is the list, and
-the numbers that matter are `TITLE_BAR 36`, `PANEL_HEADER 38`, `TOOLBAR 30`,
+the numbers that matter are `TITLE_BAR 36`, `PANEL_HEADER 44`, `TOOLBAR 36`,
 `COLUMN_HEADER 26`, `ROW 30`, `CONTROL 28`, `ICON_RAIL 48`, `SIDEBAR 304`,
 `INSPECTOR 300`, `STATUS_BAR 26`.
 
-The panel header is 38 because it carries **two lines, always**: a title and a subtitle.
+The panel header is 44 because it carries **two lines, always**: a 14px title over an
+11px subtitle, which measure about 36px of line boxes between them. The remaining 8px
+is the clear space above and below that makes the strip read as a band rather than as
+text wedged between two hairlines — at 38 the subtitle's descender sat on the border.
 A header that can only fit one line forces every panel to choose between naming itself
 and saying anything useful — which is how you end up with a screen called "Packages" and
 no idea how many there are.

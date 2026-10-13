@@ -62,12 +62,18 @@ pub mod metrics {
     pub const TITLE_BAR: f32 = 36.0;
     /// The bottom band: state segments.
     pub const STATUS_BAR: f32 = 26.0;
-    /// The title strip on a boxed panel. Tall enough for a title *and* a subtitle —
-    /// a header that can only fit one line forces every panel to choose between
-    /// naming itself and saying anything useful.
-    pub const PANEL_HEADER: f32 = 38.0;
-    /// A strip of controls between the header and the content.
-    pub const TOOLBAR: f32 = 30.0;
+    /// The title strip on a boxed panel — and the left column's own header, which
+    /// shares this value so the bands line up across zones.
+    ///
+    /// It carries two lines, always: a 14px title over an 11px subtitle. Those two
+    /// line boxes measure ~36px, so the height is that plus 4px of clear space above
+    /// and below. At 38 there was 1px of it, and the subtitle's descender sat on the
+    /// hairline.
+    pub const PANEL_HEADER: f32 = 44.0;
+    /// A strip of controls between a panel's header and its content. It has to clear
+    /// the tallest thing it holds — a `CONTROL` at 28 — with room on both sides; at 30
+    /// a button had 1px of breathing space.
+    pub const TOOLBAR: f32 = 36.0;
     /// A data table's column header.
     pub const COLUMN_HEADER: f32 = 26.0;
     /// One row of a dense list or table.

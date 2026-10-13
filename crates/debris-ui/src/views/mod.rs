@@ -19,7 +19,7 @@
 //! 1. **Each zone owns its own scroll.** The rail, the queue, the table, and the
 //!    inspector are four independent scroll regions; the shell itself never scrolls.
 //! 2. **Bands align.** The queue's header and the center's panel header are the same
-//!    34px, on the same hairline. That alignment is what makes four regions read as
+//!    44px, on the same hairline. That alignment is what makes four regions read as
 //!    one window.
 //! 3. **One search field.** The filter lives in the title bar and applies to
 //!    whichever surface is up, so a screen never has its own private copy of it.
