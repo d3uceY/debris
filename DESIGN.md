@@ -221,6 +221,27 @@ all — a silently invisible icon, with no error anywhere.
 So `icons::icon(mark, size, color)` takes the colour as a required argument. That is not
 ceremony; it is the only thing that works. Any new icon call site passes a colour.
 
+### The mark
+
+The identity is the logo, not a drawn glyph: `assets/logo.png`, a Windows flag coming
+apart. It is the product in one picture, which is why it holds the one slot the
+near-monochrome rule does not reach — 20px at the left of the title bar.
+
+It is a **raster drawn with `img`, not an SVG drawn with `svg`,** and that is the reason
+the second rule about the mark exists. `svg` would mask the file down to a single
+colour; this mark is two inks, and the blue is the point — it is the flag, and the flag
+is what is being taken apart.
+
+The file also ships **already keyed off its page colour** (the master sat on a `#F4F4F4`
+page). A logo carrying its own background has to sit on a tile or match the band behind
+it, and neither survives the appearance toggle. Keyed, one asset sits on `title_bar` in
+both token sets with nothing behind it.
+
+The exe icon is the same artwork, as `assets/debris.ico`. On Windows a window's icon is
+a resource of the *executable*, not a property of the window — GPUI's Windows backend
+asks the exe for icon resource 1 — so `crates/debris-app/build.rs` stamps it in at link
+time.
+
 ## Motion
 
 **Everything animates; nothing asks.** There are three moving things and they always

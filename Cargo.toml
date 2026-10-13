@@ -17,6 +17,10 @@ gpui_platform = { git = "https://github.com/zed-industries/zed" }
 # GPUI's `AssetSource::load` returns `anyhow::Result`, so the app cannot avoid it.
 anyhow = "1"
 
+# `debris-app`'s build script compiles the exe icon into the binary on Windows.
+# Already in the graph via GPUI's own `windows-manifest` feature.
+embed-resource = "3.0.12"
+
 debris-core = { path = "crates/debris-core" }
 debris-backend = { path = "crates/debris-backend" }
 debris-ui = { path = "crates/debris-ui" }

@@ -53,7 +53,7 @@ use crate::snapshot::{Screen, Snapshot};
 use crate::theme::{Appearance as ThemeAppearance, Theme, ThemeExt, metrics, space, text};
 use gpui::{
     AnyElement, ClickEvent, Context, FocusHandle, FontWeight, IntoElement, SharedString, WeakEntity,
-    Window, div, prelude::*, px,
+    Window, div, img, prelude::*, px,
 };
 
 /// What a debris surface can do.
@@ -222,7 +222,7 @@ fn title_bar<T: DebrisApp>(
                 .gap(px(space::SM))
                 .flex_1()
                 .min_w_0()
-                .child(brand_mark(theme))
+                .child(brand_mark())
                 .child(
                     div()
                         .font_family(theme.font_mono.clone())
@@ -323,19 +323,23 @@ fn title_bar<T: DebrisApp>(
         .into_any_element()
 }
 
-/// The mark: a square with a square knocked out of it. Two `div`s, no asset, and it
-/// reads as a monogram rather than a placeholder.
-fn brand_mark(theme: &Theme) -> AnyElement {
-    div()
-        .flex()
-        .items_center()
-        .justify_center()
-        .w(px(16.0))
-        .h(px(16.0))
+/// The logo, resolved through the app's `AssetSource` the same way the SVG set in
+/// [`crate::icons`] is.
+const LOGO: &str = "logo.png";
+
+/// The mark: a Windows flag coming apart. It is the product in one glyph, so it is
+/// the logo rather than a drawn placeholder.
+///
+/// Drawn with [`img`] and not with [`crate::icons::icon`], deliberately. GPUI
+/// rasterises an `Svg` to an alpha mask and fills it with one colour (see that
+/// module), which would throw away the two inks this mark is made of. A raster keeps
+/// its own pixels. The file ships already keyed off its page colour, so the band
+/// behind it can be the light one or the dark one with no tile to hide the seam.
+fn brand_mark() -> AnyElement {
+    img(LOGO)
+        .w(px(20.0))
+        .h(px(20.0))
         .flex_shrink_0()
-        .rounded(px(4.0))
-        .bg(theme.foreground)
-        .child(div().w(px(6.0)).h(px(6.0)).rounded(px(1.5)).bg(theme.title_bar))
         .into_any_element()
 }
 

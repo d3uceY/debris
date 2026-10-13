@@ -966,6 +966,7 @@ dependencies = [
  "debris-backend",
  "debris-core",
  "debris-ui",
+ "embed-resource",
  "gpui",
  "gpui_platform",
 ]

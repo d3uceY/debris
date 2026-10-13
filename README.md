@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/logo.png" alt="debris" width="104">
+</p>
+
 # debris
 
 A Windows debloat tool in Rust. It inventories the Appx/UWP packages installed for
