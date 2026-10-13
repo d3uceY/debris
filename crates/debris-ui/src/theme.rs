@@ -13,7 +13,7 @@
 //! Read `DESIGN.md` before changing a token. The zone heights and the neutral ramp
 //! are the two things every screen is measured against.
 
-use gpui::{App, Global, Rgba, SharedString, rgb};
+use gpui::{App, BoxShadow, Global, Rgba, SharedString, hsla, point, px, rgb};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Appearance {
@@ -175,10 +175,6 @@ pub struct Theme {
 
     /// The keyboard focus ring.
     pub ring: Rgba,
-
-    /// GPUI has no `prefers-reduced-motion`. The app exposes a setting and writes
-    /// it here, so every animation can consult one flag.
-    pub reduce_motion: bool,
 }
 
 impl Default for Theme {
@@ -225,7 +221,6 @@ impl Theme {
             success_soft: rgb(0xF0FDF4),
 
             ring: rgb(0x171717),
-            reduce_motion: false,
         }
     }
 
@@ -269,17 +264,14 @@ impl Theme {
             success_soft: rgb(0x0B2313),
 
             ring: rgb(0xFAFAFA),
-            reduce_motion: false,
         }
     }
 
     pub fn toggle_appearance(&mut self) {
-        let reduce_motion = self.reduce_motion;
         *self = match self.appearance {
             Appearance::Light => Self::dark(),
             Appearance::Dark => Self::light(),
         };
-        self.reduce_motion = reduce_motion;
     }
 
     /// A wash of red for a staged row. Deliberately strong enough to read at a
@@ -295,6 +287,33 @@ impl Theme {
     /// The band fill behind a panel header, a toolbar, or a column header.
     pub fn band(&self, veil: f32) -> Rgba {
         self.muted.opacity(veil)
+    }
+
+    /// The wash behind a floating dialog. Ink over whatever is beneath, so the surface
+    /// under it reads as inert while the dialog stays a plain panel on top — no blur,
+    /// no glass, just the same depth system the rest of the app uses.
+    pub fn scrim(&self) -> Rgba {
+        match self.appearance {
+            Appearance::Light => rgb(0x0A0A0A).opacity(0.32),
+            Appearance::Dark => rgb(0x000000).opacity(0.55),
+        }
+    }
+
+    /// The shadow under a floating surface. This is the second shadow the app is
+    /// allowed, and it exists for the same reason as the tooltip's: a dialog genuinely
+    /// floats over arbitrary content, and a hairline alone cannot separate it.
+    pub fn overlay_shadow(&self) -> Vec<BoxShadow> {
+        let color = match self.appearance {
+            Appearance::Light => hsla(0.0, 0.0, 0.0, 0.18),
+            Appearance::Dark => hsla(0.0, 0.0, 0.0, 0.50),
+        };
+        vec![BoxShadow {
+            color,
+            offset: point(px(0.0), px(10.0)),
+            blur_radius: px(30.0),
+            spread_radius: px(0.0),
+            inset: false,
+        }]
     }
 }
 

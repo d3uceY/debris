@@ -190,8 +190,8 @@ fn row_actions<T: DebrisApp>(
                     Variant::Danger
                 })
                 .disabled(!enabled)
-                .build(cx.listener(move |this: &mut T, _event: &ClickEvent, _window, cx| {
-                    this.run_script(&id, cx)
+                .build(cx.listener(move |this: &mut T, _event: &ClickEvent, window, cx| {
+                    this.request_script(&id, window, cx)
                 })),
         )
         .into_any_element()

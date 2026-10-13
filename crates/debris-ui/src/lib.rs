@@ -27,7 +27,7 @@ pub mod snapshot;
 pub mod theme;
 pub mod views;
 
-pub use snapshot::{Screen, Snapshot, Status, StatusTone};
+pub use snapshot::{Pending, Screen, Snapshot, Status, StatusTone};
 pub use theme::{Appearance, Theme, ThemeExt};
 pub use views::DebrisApp;
 
@@ -37,7 +37,7 @@ pub mod prelude {
     pub use crate::components::button::{Button, Variant, button};
     pub use crate::components::{Tone, chip, eyebrow, kbd};
     pub use crate::icons::{Icon, icon};
-    pub use crate::snapshot::{Screen, Snapshot, Status, StatusTone};
+    pub use crate::snapshot::{Pending, Screen, Snapshot, Status, StatusTone};
     pub use crate::theme::{Appearance, Theme, ThemeExt, metrics, radius, space, text, veil};
     pub use crate::views::{DebrisApp, root};
 }

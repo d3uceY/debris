@@ -8,7 +8,7 @@
 //! hairline. The left segment is the only one that changes width, so the right side
 //! never moves.
 
-use crate::components::{divider, pulse_dot};
+use crate::components::pulse_dot;
 use crate::icons::{Icon, icon};
 use crate::snapshot::{Status, StatusTone};
 use crate::theme::{Theme, metrics, space, text};
@@ -50,7 +50,6 @@ pub fn status_bar(
     theme: &Theme,
     status: &Status,
     elevated: Option<bool>,
-    reduce_motion: bool,
     busy: bool,
 ) -> AnyElement {
     let (dot, message_color) = match status.tone() {
@@ -67,7 +66,7 @@ pub fn status_bar(
     };
 
     let dot_element: AnyElement = if busy {
-        pulse_dot(theme, "status-pulse", theme.primary)
+        pulse_dot("status-pulse", theme.primary)
     } else {
         div().w(px(6.0)).h(px(6.0)).flex_shrink_0().rounded_full().bg(dot).into_any_element()
     };
@@ -125,14 +124,6 @@ pub fn status_bar(
                                 .text_size(px(text::LABEL))
                                 .child(elevation_label.to_string()),
                         ),
-                )
-                .child(divider(theme))
-                .child(
-                    div()
-                        .font_family(theme.font_mono.clone())
-                        .text_size(px(text::LABEL))
-                        .text_color(theme.muted_foreground)
-                        .child(if reduce_motion { "motion off" } else { "motion on" }),
                 ),
         )
         .into_any_element()

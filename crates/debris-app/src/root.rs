@@ -35,6 +35,7 @@ pub struct Root {
 
     search_focus: FocusHandle,
     list_focus: FocusHandle,
+    confirm_focus: FocusHandle,
 
     busy: bool,
     scanned: bool,
@@ -75,6 +76,7 @@ impl Root {
             runner: Arc::new(ProcessRunner),
             search_focus: cx.focus_handle(),
             list_focus: cx.focus_handle(),
+            confirm_focus: cx.focus_handle(),
             busy: false,
             scanned: false,
             error: None,
@@ -242,6 +244,10 @@ impl DebrisApp for Root {
         &self.list_focus
     }
 
+    fn confirm_focus(&self) -> &FocusHandle {
+        &self.confirm_focus
+    }
+
     fn navigate(&mut self, screen: Screen, cx: &mut Context<Self>) {
         if self.snapshot.screen != screen {
             self.snapshot.screen = screen;
@@ -299,8 +305,48 @@ impl DebrisApp for Root {
         Root::scan(self, cx);
     }
 
-    fn run_removal(&mut self, cx: &mut Context<Self>) {
-        Root::run_removal(self, cx);
+    fn request_removal(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        if self.busy || self.snapshot.plan.is_empty() {
+            return;
+        }
+        self.snapshot.pending = Some(Pending::Removal);
+        window.focus(&self.confirm_focus, cx);
+        cx.notify();
+    }
+
+    fn request_script(&mut self, id: &str, window: &mut Window, cx: &mut Context<Self>) {
+        if self.busy {
+            return;
+        }
+        // A preview changes nothing, so it does not need asking twice. A run that
+        // would write does.
+        if self.dry_run {
+            self.run_script(id, cx);
+            return;
+        }
+        if !self.scripts.iter().any(|script| script.id == id) {
+            self.snapshot.status = Status::Error(format!("No script called {id}."));
+            cx.notify();
+            return;
+        }
+        self.snapshot.pending = Some(Pending::Script(id.to_string()));
+        window.focus(&self.confirm_focus, cx);
+        cx.notify();
+    }
+
+    fn confirm_pending(&mut self, cx: &mut Context<Self>) {
+        match self.snapshot.pending.take() {
+            Some(Pending::Removal) => self.run_removal(cx),
+            Some(Pending::Script(id)) => self.run_script(&id, cx),
+            None => {}
+        }
+        cx.notify();
+    }
+
+    fn cancel_pending(&mut self, cx: &mut Context<Self>) {
+        if self.snapshot.pending.take().is_some() {
+            cx.notify();
+        }
     }
 
     fn load_preset(&mut self, name: &str, cx: &mut Context<Self>) {
@@ -399,12 +445,6 @@ impl DebrisApp for Root {
                 "Preview is off. Running a script will change this machine.".to_string(),
             )
         };
-        cx.notify();
-    }
-
-    fn set_reduce_motion(&mut self, on: bool, cx: &mut Context<Self>) {
-        self.theme.reduce_motion = on;
-        cx.set_global(self.theme.clone());
         cx.notify();
     }
 

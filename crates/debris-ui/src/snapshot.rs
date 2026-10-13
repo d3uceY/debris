@@ -84,6 +84,20 @@ pub enum StatusTone {
     Bad,
 }
 
+/// An action the user has asked for once and not yet confirmed.
+///
+/// This is the only thing that turns a click into a change. Staging a package is a
+/// proposal; removing it, or running a script that writes, waits here until the user
+/// says yes a second time. The variant carries identity only — the copy is composed
+/// from the rest of the snapshot (`plan`, `scripts`) so there is one source of truth.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum Pending {
+    /// Remove the packages currently staged in the queue.
+    Removal,
+    /// Run one script, by id.
+    Script(String),
+}
+
 /// The bottom edge. One line, always in the same place — never a toast that
 /// disappears before it is read.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
@@ -159,6 +173,10 @@ pub struct Snapshot {
     pub elevated: Option<bool>,
     /// Scripts are previewed unless the user turns this off.
     pub dry_run: bool,
+
+    /// A destructive action awaiting its second, explicit confirmation. `None` means
+    /// no dialog is up.
+    pub pending: Option<Pending>,
 
     /// The left column: on by default, because the removal queue is the point of the
     /// app and hiding it hides the thing the user came to check.

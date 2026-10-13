@@ -153,8 +153,8 @@ pub fn ledger<T: DebrisApp>(
                             .label(action)
                             .variant(run_variant)
                             .disabled(plan.is_empty() || busy)
-                            .build(cx.listener(|this: &mut T, _event: &ClickEvent, _window, cx| {
-                                this.run_removal(cx)
+                            .build(cx.listener(|this: &mut T, _event: &ClickEvent, window, cx| {
+                                this.request_removal(window, cx)
                             })),
                     ),
                 )

@@ -256,6 +256,12 @@ pub fn package_columns(theme: &Theme) -> AnyElement {
 ///
 /// Wider metadata has nowhere to go here, so only the two things that change a
 /// decision survive: the name, and whether the package is system-critical.
+///
+/// The whole row is the click target — clicking it returns the package to the
+/// inventory — and the trailing mark is the promise of that. It is always visible,
+/// not revealed on hover: an affordance you have to discover by accident is not an
+/// affordance. It warms to the removal colour as the row is hovered, which is the only
+/// thing the hover state has to say.
 pub fn queue_row<F>(
     theme: &Theme,
     id: (&'static str, usize),
@@ -268,8 +274,11 @@ where
     let wash = theme.danger_wash();
     let hover = theme.danger.opacity(0.14);
     let caveat = package_caveat(package, true);
+    let remove_color = theme.muted_foreground;
+    let remove_hover = theme.danger;
     let mut row = div()
         .id(id)
+        .group("queue-row")
         .flex()
         .flex_row()
         .items_center()
@@ -312,7 +321,11 @@ where
         ));
     }
 
-    row.into_any_element()
+    row.child(
+        icon(Icon::Close, crate::icons::INLINE, remove_color)
+            .group_hover("queue-row", move |style| style.text_color(remove_hover)),
+    )
+    .into_any_element()
 }
 
 /// The caveat is only worth showing where it changes a decision: on a row the user

@@ -28,11 +28,11 @@ the two places where the user has to *understand* something — and nowhere else
 The visual language is the shadcn/Tailwind **neutral** scale, as used by the desktop
 client this shell is modelled on. Three consequences, all deliberate:
 
-- **Depth is opacity, not shadow.** There is exactly one shadow in the app, under the
-  tooltip, and it exists because a tooltip floats over arbitrary content. Everything
-  else separates by laying one token over another at a named fraction: a header band,
-  a toolbar, a hovered row, a chip and a table rule are all `muted` at different
-  values. See [The veil ladder](#the-veil-ladder).
+- **Depth is opacity, not shadow.** There are exactly two shadows in the app — under the
+  tooltip and under the confirmation dialog — and both exist because those two surfaces
+  genuinely float over arbitrary content. Everything else separates by laying one token
+  over another at a named fraction: a header band, a toolbar, a hovered row, a chip and
+  a table rule are all `muted` at different values. See [The veil ladder](#the-veil-ladder).
 - **Radii are a scale, not a style.** 5 for a chip, 6 for a control or an input, 8 for
   a rail button, 10 for an empty state's tile. Containers are not rounded.
 - **Colour is a vocabulary, not decoration.** Publishers, versions, counts and labels
@@ -52,9 +52,9 @@ Four zones, three of them toggleable, on a 36px / 26px sandwich:
 │ rail │ removal queue            │ 38 header                │ inspector       │
 │      │ 38 header                │ 30 toolbar               │ 38 header       │
 │      │ rows                     │ 26 column header         │ groups          │
-│      │ footer (the confirm)     │ rows                     │                 │
-├──────┴──────────────────────────┴──────────────────────────┴─────────────────┤
-│ 26  ● what just happened        │ elevation │ motion                          │
+│      │ footer (the ask)         │ rows                     │                 │
+├──────┴───────────────────────────┴──────────────────────────┴─────────────────┤
+│ 26  ● what just happened        │ elevation                                    │
 └──────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -165,7 +165,10 @@ that is a design decision, not an implementation detail.
 - **Row** — the unit of every list. Four slots: a fixed **lead** (mark), a flexible
   **name**, fixed **meta** columns, and a `flex_shrink_0` **trailing** slot. A row
   without a mark still reserves the lead slot so labels align down the column. Rows are
-  `w_full` — without it a row is content-sized and every fixed column drifts.
+  `w_full` — without it a row is content-sized and every fixed column drifts. Where a
+  row's whole surface is the click target, the trailing slot says what that click does:
+  a queued package carries a removal mark there, always visible rather than revealed on
+  hover, because an affordance you have to discover by accident is not an affordance.
 - **Chip** — a badge, a keycap, a count. 18px tall, 5px radius, 11px type.
 - **Panel header** — a title strip. A title *and* a subtitle, always.
 - **Empty state** — a 42px tile with a mark, a title, a sentence, optional action. The
@@ -174,9 +177,29 @@ that is a design decision, not an implementation detail.
   committing action), `Outline`, `Ghost`, `Danger`; plus `DangerGhost` for a destructive
   escape.
 
-Two shapes that are deliberately **not** used: the card (a row plus a rule is enough)
-and the modal (the confirm lives in the queue's footer, where it stays readable instead
-of being dismissed).
+The card is deliberately **not** used anywhere: a row plus a rule is enough. The only
+floating surface is the confirmation dialog — see [The confirmation](#the-confirmation)
+— and it earns the interruption because it sits between a destructive click and the
+change.
+
+## The confirmation
+
+One shape, used twice. The control that starts a destructive action lives where the
+decision is made — the queue's footer, or a script's own row — and the dialog is the
+step between that click and the change. Nothing is removed and no script that writes is
+run until the dialog is answered.
+
+- **It floats, once.** A centred panel over a scrim, because its two actions live in two
+different regions of the shell and an inline confirm cannot be in both places without
+becoming two different confirmations.
+- **It keeps the app's language.** No radius on the container, the same bands, the same
+two text colours, a title and a subtitle in the header. The only additions are the scrim
+(`Theme::scrim`) and the one extra shadow (`Theme::overlay_shadow`).
+- **It does not dismiss on a click outside.** A destructive confirm wants a decision,
+not a stray click. Cancel, `Escape`, or the confirm button; nothing else.
+- **Its copy is data.** The title, the count and the caveat are composed from the plan or
+the script the app already holds, so the sentence and the button can never disagree with
+what will actually run. A preview — which changes nothing — never asks.
 
 ## Icons
 
@@ -197,18 +220,25 @@ ceremony; it is the only thing that works. Any new icon call site passes a colou
 
 ## Motion
 
-**One authored moment, nothing else.** The queue is the moment: a row arrives with the
-removal wash and the header count changes. Everything else is instant, because instant
-reads as precise and latency reads as sloppy.
+**Everything animates; nothing asks.** There are three moving things and they always
+move:
 
-The only two animations in the app are the indeterminate loading bar (a rule that pulses
-between 0.2 and 1.0 opacity) and the busy dot in the status rail. Both are gated on
-`Theme::reduce_motion`, because GPUI has no `prefers-reduced-motion`; the app exposes a
-setting and the theme carries it.
+- the indeterminate loading bar under a column header, pulsing between 0.2 and 1.0
+  opacity while a scan or a run is in flight;
+- the dot in the status rail's left segment, while something is running;
+- the caret in the one search field, blinking at the insertion point.
 
-There are no element transforms to animate with. GPUI's styling API has no `transform`,
-so the switch's knob travels by changing the row's justification, not by translating —
-the state change is instant and the *colour* carries the feedback.
+There is **no preference** for this, and there will not be one. GPUI has no
+`prefers-reduced-motion`, and a control whose entire job is to switch decoration off is
+a confession that the decoration was optional — so the setting, the `set_reduce_motion`
+event and the `motion on` segment that reported it are gone. The animations stayed.
+Each of the three reports a state that is already true; none of them is garnish, and
+none of them waits for the user to opt in.
+
+Everything else is instant, because instant reads as precise and latency reads as
+sloppy. There are no element transforms to animate with — GPUI's styling API has no
+`transform` — so the switch's knob travels by changing the row's justification, not by
+translating, and the state change is instant while the *colour* carries the feedback.
 
 ## States
 

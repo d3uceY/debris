@@ -10,7 +10,7 @@
 //! │ rail │ removal queue             │ header / toolbar / table │ inspector  │
 //! │      │ (the ledger + confirm)    │                          │ (optional) │
 //! ├──────┴───────────────────────────┴──────────────────────────┴────────────┤
-//! │ 26  ● what just happened       │ elevation │ motion                       │
+//! │ 26  ● what just happened       │ elevation                              │
 //! └──────────────────────────────────────────────────────────────────────────┘
 //! ```
 //!
@@ -34,6 +34,7 @@
 //! Handlers are built with `cx.listener`, which hands the closure `&mut T`; the views
 //! never hold a reference to the app, and the app never knows what a `div` is.
 
+mod confirm;
 mod inspector;
 mod ledger;
 mod packages;
@@ -52,7 +53,7 @@ use crate::snapshot::{Screen, Snapshot};
 use crate::theme::{Appearance as ThemeAppearance, Theme, ThemeExt, metrics, space, text};
 use gpui::{
     AnyElement, ClickEvent, Context, FocusHandle, FontWeight, IntoElement, SharedString, WeakEntity,
-    div, prelude::*, px,
+    Window, div, prelude::*, px,
 };
 
 /// What a debris surface can do.
@@ -67,6 +68,8 @@ pub trait DebrisApp: Sized + 'static {
     fn search_focus(&self) -> &FocusHandle;
     /// The inventory's focus handle, for arrow-key navigation.
     fn list_focus(&self) -> &FocusHandle;
+    /// The confirmation dialog's focus handle, so Enter and Escape reach it.
+    fn confirm_focus(&self) -> &FocusHandle;
 
     fn navigate(&mut self, screen: Screen, cx: &mut Context<Self>);
     fn set_query(&mut self, query: String, cx: &mut Context<Self>);
@@ -76,11 +79,20 @@ pub trait DebrisApp: Sized + 'static {
     fn stage_all(&mut self, cx: &mut Context<Self>);
     fn unstage_all(&mut self, cx: &mut Context<Self>);
     fn scan(&mut self, cx: &mut Context<Self>);
-    fn run_removal(&mut self, cx: &mut Context<Self>);
-    fn load_preset(&mut self, name: &str, cx: &mut Context<Self>);
+    /// Run one script, now. Views go through [`DebrisApp::request_script`]; this is the
+    /// executor the confirmation calls, so it is not the event a control binds to.
     fn run_script(&mut self, id: &str, cx: &mut Context<Self>);
+    /// Ask to remove the staged packages. Opens the confirmation; it removes nothing.
+    fn request_removal(&mut self, window: &mut Window, cx: &mut Context<Self>);
+    /// Ask to run one script. A preview runs at once; a run that would change the
+    /// machine opens the confirmation first.
+    fn request_script(&mut self, id: &str, window: &mut Window, cx: &mut Context<Self>);
+    /// Do the thing the confirmation is asking about.
+    fn confirm_pending(&mut self, cx: &mut Context<Self>);
+    /// Dismiss the confirmation without doing anything.
+    fn cancel_pending(&mut self, cx: &mut Context<Self>);
+    fn load_preset(&mut self, name: &str, cx: &mut Context<Self>);
     fn set_dry_run(&mut self, dry_run: bool, cx: &mut Context<Self>);
-    fn set_reduce_motion(&mut self, on: bool, cx: &mut Context<Self>);
     /// Switch between the light and dark token sets.
     fn toggle_appearance(&mut self, cx: &mut Context<Self>);
     /// Show or hide the left column.
@@ -103,6 +115,7 @@ pub fn root<T: DebrisApp>(this: &mut T, cx: &mut Context<T>) -> AnyElement {
     let snapshot = this.snapshot().clone();
     let search_focus = this.search_focus().clone();
     let list_focus = this.list_focus().clone();
+    let confirm_focus = this.confirm_focus().clone();
     let entity: WeakEntity<T> = cx.entity().downgrade();
 
     let center: AnyElement = match snapshot.screen {
@@ -120,8 +133,12 @@ pub fn root<T: DebrisApp>(this: &mut T, cx: &mut Context<T>) -> AnyElement {
     let inspector = snapshot
         .inspector_open
         .then(|| inspector::inspector(&theme, &snapshot, cx));
+    let confirm = snapshot.pending.as_ref().map(|pending| {
+        confirm::confirm_overlay(&theme, &snapshot, pending, &confirm_focus, cx)
+    });
 
     div()
+        .relative()
         .flex()
         .flex_col()
         .size_full()
@@ -154,9 +171,11 @@ pub fn root<T: DebrisApp>(this: &mut T, cx: &mut Context<T>) -> AnyElement {
             &theme,
             &snapshot.status,
             snapshot.elevated,
-            theme.reduce_motion,
             snapshot.is_busy(),
         ))
+        // The dialog paints last, so it sits over the whole shell and over the scroll
+        // regions inside it. `absolute` keeps it out of the shell's flex flow.
+        .when_some(confirm, |el, confirm| el.child(confirm))
         .into_any_element()
 }
 

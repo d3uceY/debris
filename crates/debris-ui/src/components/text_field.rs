@@ -135,16 +135,13 @@ fn caret(theme: &Theme, focus: &FocusHandle, id: &str) -> Div {
 
     // A caret is on or off rather than fading, so the wave is squared off. The id is
     // not decoration: an animation is keyed, and an unkeyed one restarts every frame.
-    let bar: AnyElement = if theme.reduce_motion {
-        bar.into_any_element()
-    } else {
-        bar.with_animation(
+    let bar: AnyElement = bar
+        .with_animation(
             format!("{id}-caret"),
             Animation::new(Duration::from_millis(1000)).repeat(),
             |bar, delta| bar.opacity(if delta < 0.5 { 1.0 } else { 0.0 }),
         )
-        .into_any_element()
-    };
+        .into_any_element();
 
     div()
         .flex_shrink_0()

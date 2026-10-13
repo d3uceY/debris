@@ -442,36 +442,39 @@ pub fn pane_hint(theme: &Theme, message: impl Into<SharedString>) -> AnyElement 
         .into_any_element()
 }
 
-/// Work in progress: a rule-width bar that pulses, or a still bar when the user has
-/// asked for less motion. Never a spinner in the middle of a layout that is about to
-/// be replaced by content.
+/// Work in progress: a rule-width bar that pulses, under the header. Never a spinner
+/// in the middle of a layout that is about to be replaced by content.
+///
+/// It always animates — there is no preference that turns it off (see `DESIGN.md`).
+/// The id is not decoration: an animation is keyed, and an unkeyed one restarts on
+/// every frame.
 pub fn loading_bar(theme: &Theme, id: &'static str) -> AnyElement {
-    let bar = div().w_full().h(px(2.0)).flex_shrink_0().bg(theme.primary);
-
-    if theme.reduce_motion {
-        return bar.into_any_element();
-    }
-
-    bar.with_animation(
-        id,
-        Animation::new(Duration::from_millis(1100)).repeat(),
-        |element, delta| element.opacity(0.2 + 0.8 * delta),
-    )
-    .into_any_element()
+    div()
+        .w_full()
+        .h(px(2.0))
+        .flex_shrink_0()
+        .bg(theme.primary)
+        .with_animation(
+            id,
+            Animation::new(Duration::from_millis(1100)).repeat(),
+            |element, delta| element.opacity(0.2 + 0.8 * delta),
+        )
+        .into_any_element()
 }
 
-/// A small pulsing dot, for a live status segment.
-pub fn pulse_dot(theme: &Theme, id: &'static str, color: gpui::Rgba) -> AnyElement {
-    let dot = div().w(px(6.0)).h(px(6.0)).flex_shrink_0().rounded_full().bg(color);
-
-    if theme.reduce_motion {
-        return dot.into_any_element();
-    }
-
-    dot.with_animation(
-        id,
-        Animation::new(Duration::from_millis(900)).repeat(),
-        |element, delta| element.opacity(0.35 + 0.65 * delta),
-    )
-    .into_any_element()
+/// A small pulsing dot, for the status rail's live segment. Like the loading bar it
+/// always pulses; the animation is state feedback, not an option.
+pub fn pulse_dot(id: &'static str, color: gpui::Rgba) -> AnyElement {
+    div()
+        .w(px(6.0))
+        .h(px(6.0))
+        .flex_shrink_0()
+        .rounded_full()
+        .bg(color)
+        .with_animation(
+            id,
+            Animation::new(Duration::from_millis(900)).repeat(),
+            |element, delta| element.opacity(0.35 + 0.65 * delta),
+        )
+        .into_any_element()
 }
