@@ -101,5 +101,4 @@ ever executed by the test suite**, and no test mutates the system.
 
 ## License
 
-Apache-2.0. See [LICENSE](LICENSE). The interface this was inspired by is MIT-licensed;
-see [CONTRIBUTING.md](CONTRIBUTING.md) for how third-party material in `references/` is treated.
+Apache-2.0. See [LICENSE](LICENSE).
