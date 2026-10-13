@@ -8,7 +8,6 @@
 ### these can be returned to its previous state with Set-Service -StartupType, which
 ### is why this is reversible and not destructive. Deliberately excluded:
 ### WlanSvc, WSearch and the print spooler, which people notice missing.
-### credit: adapted from Debloat-Windows-10 (MIT)
 
 [CmdletBinding()]
 param([switch]$DryRun)

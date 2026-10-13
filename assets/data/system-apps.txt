@@ -5,7 +5,7 @@
 # case-insensitive *prefix* against the package name, so an entry may name a family
 # (`Microsoft.WindowsStore`) rather than a full package identity.
 #
-# Derived from Bloatbox's `bloatbox.txt` (MIT). Removing entries makes the tool more
+# Removing entries makes the tool more
 # willing to break a machine; add to it freely.
 
 # --- shell, logon, and system infrastructure -----------------------------------

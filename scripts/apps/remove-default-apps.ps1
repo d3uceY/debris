@@ -7,7 +7,6 @@
 ### Removes the apps Windows ships preinstalled for a broad audience: news, weather,
 ### games, the Office hub, the Xbox stack. Anything on the system-critical list is
 ### left alone; comment out a line to keep that app.
-### credit: adapted from Debloat-Windows-10 (MIT)
 
 [CmdletBinding()]
 param([switch]$DryRun)

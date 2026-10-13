@@ -2,7 +2,7 @@
 
 ## What it is
 
-A Windows debloat tool: it inventories the Appx/UWP packages installed for the current user, lets you stage a set for removal, and removes them. It also runs audited PowerShell maintenance scripts from a local library, with every script previewed before it runs. A ground-up Rust/GPUI reimplementation of Bloatbox, with a stricter safety model and a different interface.
+A Windows debloat tool: it inventories the Appx/UWP packages installed for the current user, lets you stage a set for removal, and removes them. It also runs audited PowerShell maintenance scripts from a local library, with every script previewed before it runs.
 
 ## Who uses it
 

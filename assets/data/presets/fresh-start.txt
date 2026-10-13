@@ -1,6 +1,6 @@
 # Fresh Start — the preinstalled apps a clean Windows machine ships with.
 #
-# Ported from Bloatbox's Fresh Start preset (MIT). Uncomment a line to include it;
+# Uncomment a line to include it;
 # nothing here is applied until you load the preset and confirm the removal.
 
 # --- preinstalled Microsoft apps ----------------------------------------------

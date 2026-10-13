@@ -23,7 +23,6 @@ The first build takes a few minutes. `gpui` is a **git** dependency, so Cargo cl
 |---|---|
 | `src/main.rs` | App entry point and the root view |
 | `Cargo.toml` | Dependencies (both GPUI crates are pinned to one git revision) |
-| `references/` | Vendored third-party reference material, not compiled |
 
 ## GPUI traps
 

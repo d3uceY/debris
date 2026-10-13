@@ -105,12 +105,3 @@ To check a script by hand without running it:
     (Resolve-Path 'scripts/privacy/block-telemetry.ps1'), [ref]$null, [ref]$errors)
 $errors
 ```
-
-## Attribution
-
-`apps/remove-onedrive.ps1`, `apps/remove-default-apps.ps1`, and
-`privacy/disable-unwanted-services.ps1` are adapted from
-[Debloat-Windows-10](https://github.com/W4RH4WK/Debloat-Windows-10) (MIT). They have
-been rewritten onto the dry-run helpers above and had their sharpest edges removed —
-the OneDrive script no longer kills Explorer, and the app list no longer reaches for
-take-ownership privileges.

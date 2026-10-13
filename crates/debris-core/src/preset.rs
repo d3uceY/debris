@@ -4,8 +4,8 @@ use std::path::{Path, PathBuf};
 /// A named set of package names — "Fresh Start", or one the user saved.
 ///
 /// The format is deliberately the plainest thing that works: one package name per
-/// line, `#` for comments, blank lines ignored. Bloatbox used an XML
-/// `<Config><Bloatware><string>` document for this; a diffable text file is a
+/// line, `#` for comments, blank lines ignored.
+/// a diffable text file is a
 /// better citizen in a repository and needs no parser.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Preset {

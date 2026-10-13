@@ -8,7 +8,6 @@
 ### policy. Explorer is deliberately left running: the original script killed it,
 ### which closes the user's windows for no benefit. Cloud files are not touched;
 ### local sync stops.
-### credit: adapted from Debloat-Windows-10 (MIT)
 
 [CmdletBinding()]
 param([switch]$DryRun)
