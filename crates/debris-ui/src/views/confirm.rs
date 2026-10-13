@@ -36,7 +36,10 @@ pub fn confirm_overlay<T: DebrisApp>(
         .id("confirm-panel")
         .flex()
         .flex_col()
-        .w(px(440.0))
+        // Full width up to the dialog's own measure, so a window narrower than 440
+        // squeezes the panel instead of clipping it against both edges.
+        .w_full()
+        .max_w(px(440.0))
         .bg(theme.background)
         .border_1()
         .border_color(theme.border)
@@ -96,6 +99,9 @@ pub fn confirm_overlay<T: DebrisApp>(
         .flex()
         .items_center()
         .justify_center()
+        // The gutter is what the panel's `max_w` measures against, so the dialog can
+        // never touch the window edge.
+        .p(px(space::LG))
         .bg(theme.scrim())
         .occlude()
         .child(panel)
