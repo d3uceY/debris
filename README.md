@@ -6,7 +6,7 @@
 
 A Windows debloat tool in Rust. It inventories the Appx/UWP packages installed for
 the current user, lets you stage a set for removal, and removes them. It also runs
-audited PowerShell maintenance scripts from a local library, previewing each one
+audited PowerShell maintenance scripts from a local library, confirming each one
 before it runs.
 
 ## Screenshots
@@ -17,15 +17,15 @@ and nothing runs until the button at the bottom is pressed.
 ![The package inventory, with three packages staged for removal in the left column](docs/packages.png)
 
 The script library. Every script declares its own risk and whether it needs administrator
-rights, and the preview beside it runs that one script with `-DryRun`.
+rights, and the Run button beside it asks before that one script runs.
 
-![The script library, showing each script's risk, admin requirement, and dry-run preview](docs/scripts.png)
+![The script library, showing each script's risk, admin requirement, and its run button](docs/scripts.png)
 
 ## Status
 
 Early. The package inventory, staging ledger, script library, presets, and the full
 interface are implemented and tested. Package removal executes the real PowerShell
-command; scripts default to a dry run.
+command; both it and every script ask for confirmation first.
 
 ## Architecture
 
@@ -52,8 +52,8 @@ debris-app ──► debris-backend ──► debris-core
   `error`. No IO, no `std::process`,
   no GPUI. Everything here is unit-testable in microseconds.
 - **`debris-backend`** — the PowerShell boundary, behind one trait. `CommandRunner`
-  has a real implementation (spawns `powershell.exe`), a `DryRun` implementation,
-  and a `Scripted` one for tests. Discovery asks PowerShell for **CSV** rather than
+  has a real implementation (spawns `powershell.exe`) plus two test doubles that
+  record instead of spawning. Discovery asks PowerShell for **CSV** rather than
   marshalling objects, so parsing is plain, verifiable text handling.
 - **`debris-ui`** — theme tokens, the SVG icon set, components, and views. Reads
   state through a small `Snapshot` type, so it can render any state without knowing
@@ -72,8 +72,9 @@ Three rules, enforced by code and by tests rather than by convention:
    category, risk, whether it needs admin, and whether it supports `-DryRun`. The
    library refuses to mark a script runnable if it declares `risk=destructive`
    without `dry-run=yes`.
-3. **Dry run is the default.** Scripts are invoked with `-DryRun` unless the user has
-   explicitly turned it off for that run.
+3. **Every action is confirmed.** A removal and a script both open the same dialog,
+   which names what will happen and holds the only control that commits. Nothing runs
+   until it is answered.
 
 `crates/debris-backend/tests/policy.rs` asserts all three against the real
 `scripts/` directory, including that every script parses under PowerShell's own

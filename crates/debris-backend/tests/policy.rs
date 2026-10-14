@@ -262,19 +262,9 @@ fn the_shared_module_parses() {
 // ---------------------------------------------------------------------------
 
 #[test]
-fn the_default_invocation_is_a_dry_run() {
-    let script = &library_or_panic()[0];
-    let invocation = script_invocation(script, true);
-    assert!(
-        invocation.args.contains(&"-DryRun".to_string()),
-        "a script must be previewed unless the user explicitly turns it off"
-    );
-}
-
-#[test]
 fn powershell_is_always_launched_non_interactively() {
     for script in library_or_panic() {
-        let invocation = script_invocation(&script, true);
+        let invocation = script_invocation(&script);
         assert_eq!(invocation.program, "powershell.exe");
         assert!(invocation.args.contains(&"-NoProfile".to_string()));
         assert!(

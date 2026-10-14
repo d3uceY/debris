@@ -84,15 +84,13 @@ pub trait DebrisApp: Sized + 'static {
     fn run_script(&mut self, id: &str, cx: &mut Context<Self>);
     /// Ask to remove the staged packages. Opens the confirmation; it removes nothing.
     fn request_removal(&mut self, window: &mut Window, cx: &mut Context<Self>);
-    /// Ask to run one script. A preview runs at once; a run that would change the
-    /// machine opens the confirmation first.
+    /// Ask to run one script. Opens the confirmation; it runs nothing.
     fn request_script(&mut self, id: &str, window: &mut Window, cx: &mut Context<Self>);
     /// Do the thing the confirmation is asking about.
     fn confirm_pending(&mut self, cx: &mut Context<Self>);
     /// Dismiss the confirmation without doing anything.
     fn cancel_pending(&mut self, cx: &mut Context<Self>);
     fn load_preset(&mut self, name: &str, cx: &mut Context<Self>);
-    fn set_dry_run(&mut self, dry_run: bool, cx: &mut Context<Self>);
     /// Switch between the light and dark token sets.
     fn toggle_appearance(&mut self, cx: &mut Context<Self>);
     /// Show or hide the left column.

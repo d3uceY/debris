@@ -202,7 +202,7 @@ two text colours, a title and a subtitle in the header. The only additions are t
 not a stray click. Cancel, `Escape`, or the confirm button; nothing else.
 - **Its copy is data.** The title, the count and the caveat are composed from the plan or
 the script the app already holds, so the sentence and the button can never disagree with
-what will actually run. A preview — which changes nothing — never asks.
+what will actually run.
 
 ## Icons
 

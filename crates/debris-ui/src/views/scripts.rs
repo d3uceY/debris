@@ -11,7 +11,7 @@
 use crate::components::button::{Variant, button};
 use crate::components::panel::{panel_body, panel_header};
 use crate::components::rows;
-use crate::components::{Tone, chip, chip_with, empty_state, section_eyebrow, switch};
+use crate::components::{Tone, chip, empty_state, section_eyebrow};
 use crate::icons::Icon;
 use crate::snapshot::{Screen, Snapshot};
 use crate::theme::{Theme, metrics, space, veil};
@@ -39,7 +39,7 @@ pub fn screen<T: DebrisApp>(theme: &Theme, snapshot: &Snapshot, cx: &mut Context
             subtitle(snapshot, visible.len()),
             None,
         ))
-        .child(toolbar::<T>(theme, snapshot, visible.len(), cx))
+        .child(toolbar(theme, visible.len()))
         .child(body::<T>(theme, snapshot, &visible, cx))
         .into_any_element()
 }
@@ -59,26 +59,14 @@ fn subtitle(snapshot: &Snapshot, shown: usize) -> String {
     let total = snapshot.scripts.len();
     // Say "of" only when the search field is actually narrowing something; otherwise
     // the two numbers are the same number said twice.
-    let scope = if shown == total {
+    if shown == total {
         shared::count(total, "script", "scripts")
     } else {
         format!("{shown} of {total} shown")
-    };
-    if snapshot.dry_run {
-        format!("{scope} · previewing")
-    } else {
-        format!("{scope} · preview off")
     }
 }
 
-fn toolbar<T: DebrisApp>(
-    theme: &Theme,
-    snapshot: &Snapshot,
-    shown: usize,
-    cx: &mut Context<T>,
-) -> AnyElement {
-    let dry_run = snapshot.dry_run;
-
+fn toolbar(theme: &Theme, shown: usize) -> AnyElement {
     div()
         .flex()
         .flex_row()
@@ -91,26 +79,6 @@ fn toolbar<T: DebrisApp>(
         .bg(theme.band(veil::BAND_QUIET))
         .border_b_1()
         .border_color(theme.border)
-        .child(switch(
-            theme,
-            "preview-scripts",
-            dry_run,
-            "Preview with -DryRun",
-            cx.listener(|this: &mut T, _event: &ClickEvent, _window, cx| {
-                let next = !this.snapshot().dry_run;
-                this.set_dry_run(next, cx);
-            }),
-        ))
-        // When preview is off this is the most important sentence on the screen, so
-        // it stops being a muted note and becomes a warning chip.
-        .when(!dry_run, |row| {
-            row.child(chip_with(
-                theme,
-                Some(Icon::Alert),
-                "Preview off: running a script will change this machine",
-                Tone::Danger,
-            ))
-        })
         .child(div().flex_1())
         .child(chip(theme, format!("{shown} shown"), Tone::Quiet))
         .into_any_element()
@@ -171,7 +139,9 @@ fn row_actions<T: DebrisApp>(
     cx: &mut Context<T>,
 ) -> AnyElement {
     let id = script.id.clone();
-    let dry_run = snapshot.dry_run;
+    // Running a script changes the machine, so the action is coloured by the risk the
+    // script declares rather than dressed up as something softer.
+    let destructive = script.risk.is_destructive();
     // A script the library refused is not offered, and says why in its own row.
     let enabled = script.is_runnable() && !snapshot.is_busy();
 
@@ -182,12 +152,16 @@ fn row_actions<T: DebrisApp>(
         .gap(px(space::SM))
         .child(
             button(theme, format!("run-script-{}", script.id))
-                .label(if dry_run { "Preview" } else { "Run" })
-                .icon(if dry_run { Icon::Eye } else { Icon::Alert })
-                .variant(if dry_run {
-                    Variant::Outline
+                .label("Run")
+                .icon(if destructive {
+                    Icon::Alert
                 } else {
+                    Icon::ArrowRight
+                })
+                .variant(if destructive {
                     Variant::Danger
+                } else {
+                    Variant::Outline
                 })
                 .disabled(!enabled)
                 .build(cx.listener(move |this: &mut T, _event: &ClickEvent, window, cx| {

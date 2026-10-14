@@ -388,7 +388,7 @@ pub fn script_row(theme: &Theme, script: &ScriptMeta, actions: AnyElement) -> An
             .child(actions),
     );
 
-    // The mono identity line: what it is called on disk, and what it needs.
+    // The mono identity line: what it is called on disk, and who wrote it.
     let mut identity = div()
         .flex()
         .flex_row()
@@ -398,13 +398,7 @@ pub fn script_row(theme: &Theme, script: &ScriptMeta, actions: AnyElement) -> An
         .font_family(font_mono)
         .text_size(px(text::LABEL))
         .text_color(muted)
-        .child(script.id.clone())
-        .child("·")
-        .child(if script.supports_dry_run {
-            "-DryRun supported"
-        } else {
-            "no dry run"
-        });
+        .child(script.id.clone());
 
     if let Some(author) = &script.author {
         identity = identity.child("·").child(format!("by {author}"));

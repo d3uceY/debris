@@ -36,21 +36,17 @@ impl Invocation {
     ///
     /// `-ExecutionPolicy Bypass` is scoped to this one process; nothing about the
     /// machine's policy is modified.
-    pub fn script(path: &Path, dry_run: bool) -> Self {
-        let mut args = vec![
-            "-NoProfile".to_string(),
-            "-NonInteractive".to_string(),
-            "-ExecutionPolicy".to_string(),
-            "Bypass".to_string(),
-            "-File".to_string(),
-            path.display().to_string(),
-        ];
-        if dry_run {
-            args.push("-DryRun".to_string());
-        }
+    pub fn script(path: &Path) -> Self {
         Self {
             program: "powershell.exe".to_string(),
-            args,
+            args: vec![
+                "-NoProfile".to_string(),
+                "-NonInteractive".to_string(),
+                "-ExecutionPolicy".to_string(),
+                "Bypass".to_string(),
+                "-File".to_string(),
+                path.display().to_string(),
+            ],
         }
     }
 
@@ -153,9 +149,8 @@ impl CommandRunner for ProcessRunner {
 
 /// Records invocations and reports success without running anything.
 ///
-/// A test double, like [`ScriptedRunner`]: the live preview is the `-DryRun` flag
-/// handed to a script, not a runner. This exists so a test can assert on exactly
-/// what would have run without spawning anything.
+/// A test double, like [`ScriptedRunner`]: it lets a test assert on exactly what
+/// would have run without spawning a process.
 #[derive(Debug, Default)]
 pub struct DryRunRunner {
     log: Mutex<Vec<Invocation>>,
@@ -245,19 +240,18 @@ mod tests {
     }
 
     #[test]
-    fn a_script_invocation_passes_dry_run_only_when_asked() {
-        let path = Path::new("scripts/apps/remove-onedrive.ps1");
-        let dry = Invocation::script(path, true);
-        assert!(dry.args.contains(&"-DryRun".to_string()));
-
-        let live = Invocation::script(path, false);
-        assert!(!live.args.contains(&"-DryRun".to_string()));
-        assert!(live.args.contains(&"-File".to_string()));
+    fn a_script_invocation_runs_the_file() {
+        let invocation = Invocation::script(Path::new("scripts/apps/remove-onedrive.ps1"));
+        assert!(invocation.args.contains(&"-File".to_string()));
+        assert!(
+            !invocation.args.contains(&"-DryRun".to_string()),
+            "a script is run for real once the confirmation is answered"
+        );
     }
 
     #[test]
     fn display_quotes_arguments_containing_spaces() {
-        let invocation = Invocation::script(Path::new("C:/Program Files/x.ps1"), true);
+        let invocation = Invocation::script(Path::new("C:/Program Files/x.ps1"));
         let shown = invocation.display();
         assert!(shown.contains("\"C:/Program Files/x.ps1\""));
     }

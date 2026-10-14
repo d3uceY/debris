@@ -56,7 +56,6 @@ pub enum Icon {
     Shield,
     Store,
     Cpu,
-    Eye,
 }
 
 impl Icon {
@@ -80,7 +79,6 @@ impl Icon {
             Icon::Shield => "icons/shield.svg",
             Icon::Store => "icons/store.svg",
             Icon::Cpu => "icons/cpu.svg",
-            Icon::Eye => "icons/eye.svg",
         }
     }
 }

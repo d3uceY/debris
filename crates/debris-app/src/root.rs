@@ -41,7 +41,6 @@ pub struct Root {
     scanned: bool,
     error: Option<String>,
     elevation: Option<bool>,
-    dry_run: bool,
 }
 
 impl Root {
@@ -62,7 +61,6 @@ impl Root {
         let mut snapshot = Snapshot::new();
         snapshot.scripts = Arc::new(scripts.clone());
         snapshot.presets = Arc::new(presets.clone());
-        snapshot.dry_run = true;
         snapshot.status = Status::Info("Press Rescan to read the package inventory.".to_string());
 
         let mut root = Self {
@@ -80,7 +78,6 @@ impl Root {
             scanned: false,
             error: None,
             elevation: None,
-            dry_run: true,
         };
 
         cx.set_global(root.theme.clone());
@@ -113,7 +110,6 @@ impl Root {
         self.snapshot.scanned = self.scanned;
         self.snapshot.error = self.error.clone();
         self.snapshot.elevated = self.elevation;
-        self.snapshot.dry_run = self.dry_run;
         self.snapshot.clamp_cursor();
         cx.notify();
     }
@@ -317,12 +313,6 @@ impl DebrisApp for Root {
         if self.busy {
             return;
         }
-        // A preview changes nothing, so it does not need asking twice. A run that
-        // would write does.
-        if self.dry_run {
-            self.run_script(id, cx);
-            return;
-        }
         if !self.scripts.iter().any(|script| script.id == id) {
             self.snapshot.status = Status::Error(format!("No script called {id}."));
             cx.notify();
@@ -387,20 +377,18 @@ impl DebrisApp for Root {
             return;
         };
 
-        let dry_run = self.dry_run;
         let title = script.title.clone();
-        let verb = if dry_run { "Previewing" } else { "Running" };
 
         self.busy = true;
-        self.snapshot.loading = Some(format!("{verb} {title}"));
-        self.snapshot.status = Status::Activity(format!("{verb} {title}"));
+        self.snapshot.loading = Some(format!("Running {title}"));
+        self.snapshot.status = Status::Activity(format!("Running {title}"));
         cx.notify();
 
         let runner = self.runner.clone();
         let finished_title = title.clone();
         self.run_off_thread(
             cx,
-            move || script_runner::run_script(&script, &*runner, dry_run),
+            move || script_runner::run_script(&script, &*runner),
             move |root, result, cx| {
                 root.busy = false;
                 root.snapshot.loading = None;
@@ -432,19 +420,6 @@ impl DebrisApp for Root {
                 root.sync(cx);
             },
         );
-    }
-
-    fn set_dry_run(&mut self, dry_run: bool, cx: &mut Context<Self>) {
-        self.dry_run = dry_run;
-        self.snapshot.dry_run = dry_run;
-        self.snapshot.status = if dry_run {
-            Status::Info("Scripts will preview with -DryRun. Nothing will change.".to_string())
-        } else {
-            Status::Caution(
-                "Preview is off. Running a script will change this machine.".to_string(),
-            )
-        };
-        cx.notify();
     }
 
     fn toggle_appearance(&mut self, cx: &mut Context<Self>) {

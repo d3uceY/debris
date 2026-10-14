@@ -15,22 +15,16 @@ pub fn is_elevated(runner: &dyn CommandRunner) -> bool {
         .unwrap_or(false)
 }
 
-/// How a script is invoked. `dry_run` adds `-DryRun`, which every script in the
-/// library is required to honour.
-pub fn script_invocation(meta: &ScriptMeta, dry_run: bool) -> Invocation {
-    Invocation::script(&meta.path, dry_run)
+/// How a script is invoked.
+pub fn script_invocation(meta: &ScriptMeta) -> Invocation {
+    Invocation::script(&meta.path)
 }
 
-/// Runs a script. **The default the app passes is `dry_run: true`.**
+/// Runs a script now. The interface asks for confirmation before it gets here.
 ///
-/// A script the library has refused — destructive without dry-run support — is
-/// refused here too, so the refusal cannot be bypassed by a caller that skips the
-/// interface.
-pub fn run_script(
-    meta: &ScriptMeta,
-    runner: &dyn CommandRunner,
-    dry_run: bool,
-) -> Result<RunOutput> {
+/// A script the library has refused is refused here too, so the refusal cannot be
+/// bypassed by a caller that skips the interface.
+pub fn run_script(meta: &ScriptMeta, runner: &dyn CommandRunner) -> Result<RunOutput> {
     if !meta.is_runnable() {
         return Err(DebrisError::Failed {
             program: meta.id.clone(),
@@ -40,7 +34,7 @@ pub fn run_script(
                 .to_string(),
         });
     }
-    runner.run(&script_invocation(meta, dry_run))
+    runner.run(&script_invocation(meta))
 }
 
 #[cfg(test)]
@@ -58,32 +52,19 @@ mod tests {
     const UNSAFE: &str = "### title: Bad\n### category: apps\n### risk: destructive\n### dry-run: no\n";
 
     #[test]
-    fn a_dry_run_is_requested_explicitly() {
+    fn a_script_is_invoked_as_a_file() {
         let meta = script(REVERSIBLE);
-        let invocation = script_invocation(&meta, true);
-        assert!(invocation.args.contains(&"-DryRun".to_string()));
-    }
-
-    #[test]
-    fn turning_the_dry_run_off_removes_the_switch() {
-        let meta = script(REVERSIBLE);
-        let invocation = script_invocation(&meta, false);
-        assert!(!invocation.args.contains(&"-DryRun".to_string()));
-    }
-
-    #[test]
-    fn the_script_path_is_passed_as_a_file_not_as_a_command() {
-        let meta = script(REVERSIBLE);
-        let invocation = script_invocation(&meta, true);
+        let invocation = script_invocation(&meta);
         let file_at = invocation.args.iter().position(|arg| arg == "-File").unwrap();
         assert!(invocation.args[file_at + 1].ends_with("demo.ps1"));
+        assert!(!invocation.args.contains(&"-DryRun".to_string()));
     }
 
     #[test]
     fn running_a_refused_script_is_an_error() {
         let meta = script(UNSAFE);
         let runner = DryRunRunner::new();
-        let err = run_script(&meta, &runner, false).unwrap_err();
+        let err = run_script(&meta, &runner).unwrap_err();
         assert!(matches!(err, DebrisError::Failed { .. }));
         assert!(
             runner.log().is_empty(),
@@ -95,7 +76,7 @@ mod tests {
     fn a_safe_script_runs() {
         let meta = script(REVERSIBLE);
         let runner = DryRunRunner::new();
-        assert!(run_script(&meta, &runner, true).unwrap().succeeded());
+        assert!(run_script(&meta, &runner).unwrap().succeeded());
         assert_eq!(runner.log().len(), 1);
     }
 

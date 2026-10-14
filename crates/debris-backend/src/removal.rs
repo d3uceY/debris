@@ -145,7 +145,7 @@ mod tests {
     }
 
     #[test]
-    fn a_dry_run_records_the_commands_without_running_them() {
+    fn the_recording_runner_never_runs_anything() {
         let runner = DryRunRunner::new();
         let outcomes = execute(&plan(&["A.One", "B.Two"]), &runner);
         assert!(outcomes.iter().all(|outcome| outcome.removed));

@@ -171,8 +171,6 @@ pub struct Snapshot {
     /// `None` until the elevation probe has run. Assuming `false` would show
     /// "Standard user" to an administrator for the first few seconds.
     pub elevated: Option<bool>,
-    /// Scripts are previewed unless the user turns this off.
-    pub dry_run: bool,
 
     /// A destructive action awaiting its second, explicit confirmation. `None` means
     /// no dialog is up.

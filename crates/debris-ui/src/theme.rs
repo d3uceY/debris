@@ -171,7 +171,7 @@ pub struct Theme {
     /// A wash of red for a staged row.
     pub danger_soft: Rgba,
 
-    /// Caution: a system-critical package, a dry run that is switched off.
+    /// Caution: a system-critical package, a removal that carries a caveat.
     pub warning: Rgba,
     pub warning_soft: Rgba,
 

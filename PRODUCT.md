@@ -2,7 +2,7 @@
 
 ## What it is
 
-A Windows debloat tool: it inventories the Appx/UWP packages installed for the current user, lets you stage a set for removal, and removes them. It also runs audited PowerShell maintenance scripts from a local library, with every script previewed before it runs.
+A Windows debloat tool: it inventories the Appx/UWP packages installed for the current user, lets you stage a set for removal, and removes them. It also runs audited PowerShell maintenance scripts from a local library, with every script confirmed before it runs.
 
 ## Who uses it
 
@@ -31,7 +31,7 @@ Windows only, by nature — the work is Appx package management and PowerShell e
 ## Constraints
 
 - **Nothing destructive happens without an explicit, informed confirm.** The staging list is a proposal, never an action.
-- **Dry-run is the default for scripts.** A script must declare its risk and support `-DryRun` to be listed as runnable.
+- **Scripts declare their own risk.** The header names the category, the risk, and whether admin is needed, and the row shows it before the script runs.
 - Elevation is never silent. If a script needs admin, say so before it runs, not after it fails.
 - No network calls. No telemetry. No auto-update phone-home (the original shipped one; this does not).
 - Machine-local only: no accounts, no sync.
