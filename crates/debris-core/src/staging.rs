@@ -67,11 +67,21 @@ impl Staging {
     /// Replaces the inventory, keeping staged packages that are still installed.
     /// Anything staged but no longer present is dropped — a stale entry in the
     /// removal column would be a lie about what is about to happen.
+    ///
+    /// Staging only *proposes* a removal, so it does not uninstall anything: a rescan
+    /// reports every staged package again. Those stay in the removal column and are
+    /// filtered out of the inventory, or one package would appear in both columns as
+    /// two copies of itself.
     pub fn set_inventory(&mut self, mut packages: Vec<AppxPackage>) {
         packages.sort_by(|a, b| a.name.cmp(&b.name).then(a.full_name.cmp(&b.full_name)));
-        let present: Vec<String> = packages.iter().map(|p| p.name.clone()).collect();
+
+        let installed: Vec<String> = packages.iter().map(|p| p.name.clone()).collect();
         self.removal
-            .retain(|staged| present.iter().any(|name| name == &staged.name));
+            .retain(|staged| installed.iter().any(|name| name == &staged.name));
+
+        let staged: Vec<String> = self.removal.iter().map(|p| p.name.clone()).collect();
+        packages.retain(|package| !staged.iter().any(|name| name == &package.name));
+
         self.inventory = packages;
         self.rebuild_visible();
     }
@@ -420,6 +430,23 @@ mod tests {
         staging.stage("SpotifyAB.SpotifyMusic");
         staging.set_inventory(sample());
         assert_eq!(staging.counts().staged, 1);
+    }
+
+    #[test]
+    fn a_rescan_does_not_duplicate_a_staged_package_into_the_inventory() {
+        let mut staging = Staging::new(sample());
+        staging.stage("SpotifyAB.SpotifyMusic");
+        // Staging does not uninstall anything, so a rescan reports the package again.
+        // It belongs in one column, not both.
+        staging.set_inventory(sample());
+        assert_eq!(staging.counts(), Counts { installed: 2, staged: 1 });
+        assert!(
+            !staging
+                .inventory()
+                .iter()
+                .any(|package| package.name == "SpotifyAB.SpotifyMusic"),
+            "a staged package must not also appear in the inventory"
+        );
     }
 
     #[test]

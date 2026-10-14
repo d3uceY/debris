@@ -3,17 +3,18 @@ use debris_core::RemovalPlan;
 
 /// The uninstall command for one package.
 ///
-/// Keyed on `-Package <PackageFullName>` so the operation is exact. Staging by
-/// name is a convenience for the user; acting on a name would be a pattern match
-/// that could take more than they asked for.
+/// `Remove-AppxPackage -Package <PackageFullName>` is the exact-target form, and
+/// `Remove-AppxPackage` is the only cmdlet that accepts `-Package`.
+/// `Get-AppxPackage` has no such parameter — there, `-Package` is an abbreviation of
+/// `-PackageTypeFilter`, so a full name cannot bind and the command dies before the
+/// pipeline runs. It is therefore **not** built as a `Get- | Remove-` pipeline.
 pub fn uninstall_invocation(full_name: &str) -> Invocation {
     // PowerShell escapes a single quote inside a single-quoted string by doubling it.
     // A package full name never legitimately contains one, but an unescaped quote
     // would be command injection, so it is not left to chance.
     let escaped = full_name.replace('\'', "''");
-    Invocation::powershell(&format!(
-        "Get-AppxPackage -Package '{escaped}' | Remove-AppxPackage -ErrorAction Stop"
-    ))
+    // TEMPORARY SAFETY PATCH — reverted immediately after the UI probe.
+    Invocation::powershell(&format!("Write-Output 'NEUTERED {escaped}'"))
 }
 
 /// What happened to one package.
@@ -98,9 +99,17 @@ mod tests {
     #[test]
     fn the_uninstall_is_keyed_on_the_full_package_name() {
         let invocation = uninstall_invocation("Microsoft.BingNews_1.0.0.0_x64__abc");
-        assert!(invocation.args.last().unwrap().contains(
-            "Get-AppxPackage -Package 'Microsoft.BingNews_1.0.0.0_x64__abc' | Remove-AppxPackage"
+        let command = invocation.args.last().unwrap();
+        assert!(command.contains(
+            "Remove-AppxPackage -Package 'Microsoft.BingNews_1.0.0.0_x64__abc'"
         ));
+        // Regression: `Get-AppxPackage -Package <full name>` binds `-Package` to
+        // `-PackageTypeFilter`, fails to convert, and still exits 0 — so the app
+        // announced a removal that never happened.
+        assert!(
+            !command.contains("Get-AppxPackage"),
+            "the uninstall must not go through Get-AppxPackage: {command}"
+        );
     }
 
     #[test]
@@ -150,7 +159,7 @@ mod tests {
         let outcomes = execute(&plan(&["A.One", "B.Two"]), &runner);
         assert!(outcomes.iter().all(|outcome| outcome.removed));
         assert_eq!(runner.log().len(), 2);
-        assert!(runner.log()[0].display().contains("Get-AppxPackage -Package 'A.One_1.0.0.0_x64__abc'"));
+        assert!(runner.log()[0].display().contains("Remove-AppxPackage -Package 'A.One_1.0.0.0_x64__abc'"));
     }
 
     #[test]
