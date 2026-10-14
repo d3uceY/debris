@@ -9,6 +9,18 @@ the current user, lets you stage a set for removal, and removes them. It also ru
 audited PowerShell maintenance scripts from a local library, previewing each one
 before it runs.
 
+## Screenshots
+
+Packages are staged in the left column: a row leaves the table and lands in the queue,
+and nothing runs until the button at the bottom is pressed.
+
+![The package inventory, with three packages staged for removal in the left column](docs/packages.png)
+
+The script library. Every script declares its own risk and whether it needs administrator
+rights, and the preview beside it runs that one script with `-DryRun`.
+
+![The script library, showing each script's risk, admin requirement, and dry-run preview](docs/scripts.png)
+
 ## Status
 
 Early. The package inventory, staging ledger, script library, presets, and the full
@@ -80,6 +92,7 @@ scripts/         the PowerShell library, segmented by intent
 assets/
   icons/         the SVG icon set
   data/          system-app list, shipped presets
+docs/            the screenshots above
 ```
 
 Both directories are the source of truth, and both are **embedded into the binary at
