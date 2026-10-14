@@ -12,7 +12,7 @@
 //! result back on the main thread. Handlers stay readable because the bridging is not
 //! repeated at every call site.
 
-use crate::paths::Layout;
+use crate::bundle;
 use debris_backend::runner::{CommandRunner, ProcessRunner};
 use debris_backend::{discovery, is_elevated, removal, scripts as script_runner};
 use debris_core::{
@@ -46,9 +46,8 @@ pub struct Root {
 
 impl Root {
     pub fn new(cx: &mut Context<Self>) -> Self {
-        let layout = Layout::discover();
-        let catalog = layout.system_catalog();
-        let scripts = match layout.scripts() {
+        let catalog = bundle::system_catalog();
+        let scripts = match bundle::scripts() {
             Ok(scripts) => scripts,
             Err(error) => {
                 // A library that will not load is worth saying out loud rather than
@@ -57,7 +56,7 @@ impl Root {
                 Vec::new()
             }
         };
-        let presets = layout.presets();
+        let presets = bundle::presets();
 
         let theme = Theme::light();
         let mut snapshot = Snapshot::new();

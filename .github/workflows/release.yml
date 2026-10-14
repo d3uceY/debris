@@ -2,10 +2,11 @@ name: Release
 
 # Windows only, GitHub only.
 #
-# The deliverable is one zip: the exe plus the `assets/` and `scripts/` it reads off
-# disk at runtime (`Layout::discover`) — the exe alone cannot show an icon or run a
-# script. It is attached to a GitHub Release and to nothing else. There is deliberately
-# no Homebrew cask, no winget manifest, no update manifest and no deploy hook.
+# The deliverable is one file: a self-contained `debris.exe`. There is nothing to unzip
+# and nothing to sit beside it — the icon set, the presets, the system catalogue and the
+# PowerShell library are all embedded at build time (`crates/debris-app/build.rs`). It is
+# attached to a GitHub Release and to nothing else. There is deliberately no Homebrew
+# cask, no winget manifest, no update manifest and no deploy hook.
 #
 # The tag you push *is* the version. Nothing here computes one:
 #
@@ -105,26 +106,13 @@ jobs:
       - name: Build
         run: cargo build --release -p debris-app
 
-      # `assets/` is the icon set, the system-package catalogue and the presets;
-      # `scripts/` is the PowerShell library. Both are resolved beside the binary when
-      # there is no source checkout around it, so both have to ship next to the exe.
-      - name: Stage the portable build
-        shell: pwsh
-        run: |
-          $stage = Join-Path $PWD 'staging/debris'
-          New-Item -ItemType Directory -Path $stage -Force | Out-Null
-          Copy-Item -LiteralPath 'target/release/debris.exe' -Destination $stage
-          Copy-Item -LiteralPath 'assets' -Destination $stage -Recurse
-          Copy-Item -LiteralPath 'scripts' -Destination $stage -Recurse
-          Copy-Item -LiteralPath 'README.md' -Destination $stage
-          Copy-Item -LiteralPath 'LICENSE' -Destination $stage
-          Compress-Archive -Path $stage -DestinationPath 'debris-windows-x64.zip' -Force
-
-      - name: Upload the zip
+      # The artifact is the exe itself, not an archive of it: a release asset you can
+      # download and run, with no unzip step in between.
+      - name: Upload the exe
         uses: actions/upload-artifact@v7
         with:
           name: debris-windows-x64
-          path: debris-windows-x64.zip
+          path: target/release/debris.exe
           if-no-files-found: error
 
   release:
@@ -132,7 +120,7 @@ jobs:
     needs: [prepare, build]
     runs-on: ubuntu-latest
     steps:
-      - name: Download the zip
+      - name: Download the exe
         uses: actions/download-artifact@v7
         with:
           path: dist
@@ -147,4 +135,4 @@ jobs:
           generate_release_notes: true
           make_latest: "true"
           draft: false
-          files: dist/*.zip
+          files: dist/debris.exe

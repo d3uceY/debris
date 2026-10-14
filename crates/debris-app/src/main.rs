@@ -2,13 +2,18 @@
 //!
 //! Boot is deliberately short: register the asset source, install the theme global,
 //! open one window, and let the view do the rest.
+//!
+//! A released build is launched by double-clicking it, so it is a `windows` subsystem
+//! binary and Windows never gives it a console. Debug builds keep theirs, which is
+//! where the `debris: ..` diagnostics go; `cfg(test)` keeps it too, or a release-mode
+//! test run would swallow its own output.
+#![cfg_attr(all(not(test), not(debug_assertions)), windows_subsystem = "windows")]
 
 mod assets;
-mod paths;
+mod bundle;
 mod root;
 
 use crate::assets::Assets;
-use crate::paths::Layout;
 use crate::root::Root;
 use debris_ui::prelude::*;
 // `AppContext` — which provides `cx.new(..)` and `cx.set_global(..)` — arrives with
@@ -17,11 +22,9 @@ use gpui::{App, Bounds, WindowBounds, WindowOptions, prelude::*, px, size};
 use gpui_platform::application;
 
 fn main() {
-    let layout = Layout::discover();
-
     application()
-        // The icon set is data on disk, resolved through this source.
-        .with_assets(Assets::new(layout.icon_root()))
+        // The icon set is embedded in the binary; see `assets` and `bundle`.
+        .with_assets(Assets)
         .run(|cx: &mut App| {
             // Light is the default; see DESIGN.md for why the scene picks it.
             cx.set_global(Theme::light());

@@ -127,7 +127,7 @@ fn body<T: DebrisApp>(
             theme,
             Icon::Terminal,
             "No scripts found",
-            "The library lives in scripts/ next to the project. A *.ps1 file with a valid ### header appears here; one without a header is refused.",
+            "Script library is empty.",
             None,
         );
     }

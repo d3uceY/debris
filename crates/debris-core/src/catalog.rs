@@ -1,6 +1,3 @@
-use crate::error::{DebrisError, Result};
-use std::path::Path;
-
 /// The packages Windows itself needs.
 ///
 /// Anything matching this list is a system component: hidden from the inventory by
@@ -25,15 +22,6 @@ impl SystemCatalog {
             .map(|line| line.to_ascii_lowercase())
             .collect();
         Self { entries }
-    }
-
-    pub fn from_file(path: impl AsRef<Path>) -> Result<Self> {
-        let path = path.as_ref();
-        let text = std::fs::read_to_string(path).map_err(|source| DebrisError::Io {
-            path: path.to_path_buf(),
-            source,
-        })?;
-        Ok(Self::parse(&text))
     }
 
     pub fn len(&self) -> usize {

@@ -46,7 +46,8 @@ debris-app ──► debris-backend ──► debris-core
 - **`debris-ui`** — theme tokens, the SVG icon set, components, and views. Reads
   state through a small `Snapshot` type, so it can render any state without knowing
   where it came from.
-- **`debris-app`** — asset source, window, and the controller that owns the state
+- **`debris-app`** — the embedded data (the build script bakes `assets/` and `scripts/`
+  into the binary), the asset source, the window, and the controller that owns the state
   and moves work off the render thread.
 
 ### The safety model
@@ -81,6 +82,13 @@ assets/
   data/          system-app list, shipped presets
 ```
 
+Both directories are the source of truth, and both are **embedded into the binary at
+build time** — a released exe needs nothing beside it. Only the files the app actually
+reads go in, so `assets/debris.ico` (a link-time resource) and `scripts/README.md` (this
+repository's own documentation) stay out. The script library is unpacked to
+`%LOCALAPPDATA%\debris\scripts\<hash>` on launch: PowerShell runs a script from a real
+path, and the shared module is imported through `$PSScriptRoot`.
+
 ## Build
 
 Requires Rust 1.85+ and Windows.
@@ -113,10 +121,12 @@ git push origin v0.1.2
 ```
 
 Nothing computes a version. The workflow reads `v0.1.2` off the tag, stamps `0.1.2` into
-`[workspace.package].version`, builds on `windows-latest`, and attaches one zip — the exe
-with the `assets/` and `scripts/` it reads off disk — to a GitHub Release tagged `v0.1.2`.
-That same `0.1.2` is what the app puts in the status rail and what Windows shows in the
-exe's properties, so the tag, the release and the binary can never disagree.
+`[workspace.package].version`, builds on `windows-latest`, and attaches one file —
+`debris.exe` — to a GitHub Release tagged `v0.1.2`. Everything the app reads at runtime is
+inside it, so downloading it and double-clicking it is the whole installation: no unzip, no
+console window, no data directory beside it. That same `0.1.2` is what the app puts in the
+status rail and what Windows shows in the exe's properties, so the tag, the release and the
+binary can never disagree.
 
 To release a commit you have not tagged, run **Release → Run workflow** from the Actions
 tab and give it a version; the tag is created at the commit the run started from.
