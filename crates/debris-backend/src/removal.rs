@@ -13,8 +13,7 @@ pub fn uninstall_invocation(full_name: &str) -> Invocation {
     // A package full name never legitimately contains one, but an unescaped quote
     // would be command injection, so it is not left to chance.
     let escaped = full_name.replace('\'', "''");
-    // TEMPORARY SAFETY PATCH — reverted immediately after the UI probe.
-    Invocation::powershell(&format!("Write-Output 'NEUTERED {escaped}'"))
+    Invocation::powershell(&format!("Remove-AppxPackage -Package '{escaped}'"))
 }
 
 /// What happened to one package.
