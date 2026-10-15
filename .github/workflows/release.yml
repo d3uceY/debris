@@ -150,15 +150,18 @@ jobs:
 
           # One call for the whole range. `github.sha` is the head, not the tag: a manual
           # run creates the tag after this step, so the tag may not exist yet.
-          if ($previous) {
-            $json = gh api "repos/$env:REPO/compare/$previous...$env:SHA"
+          $raw = if ($previous) {
+            gh api "repos/$env:REPO/compare/$previous...$env:SHA"
           } else {
-            $json = gh api "repos/$env:REPO/commits?sha=$env:SHA&per_page=100"
+            gh api "repos/$env:REPO/commits?sha=$env:SHA&per_page=100"
           }
           if ($LASTEXITCODE -ne 0) { throw "could not read the commit list" }
 
-          $commits = @($json | ConvertFrom-Json)
-          if ($previous) { $commits = @($commits[0].commits) }
+          # A native command's output arrives as one array element per line, so the
+          # document has to be put back together before it is JSON again.
+          $data = ConvertFrom-Json -InputObject ($raw -join "`n")
+          $commits = @($data)
+          if ($previous) { $commits = @($data.commits) }
           if ($commits.Count -eq 0) { throw "no commits found for $env:SHA" }
 
           $lines = @('## Commits', '')
