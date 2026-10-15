@@ -1,0 +1,15 @@
+[
+  {
+    "name": "Export network configuration",
+    "description": "Writes your addresses, gateways, DNS servers and proxy settings to a text report.",
+    "url": "https://raw.githubusercontent.com/d3uceY/debris/main/examples/extensions/export-network-config.ps1",
+    "version": "1.0"
+  },
+  {
+    "name": "Export recent security events",
+    "description": "Writes the newest Security log entries to a text report. Needs an administrator token.",
+    "url": "https://raw.githubusercontent.com/d3uceY/debris/main/examples/extensions/export-recent-security-events.ps1",
+    "version": "1.0",
+    "requiresAdmin": true
+  }
+]

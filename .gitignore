@@ -1,2 +1,6 @@
 /target
 /references
+
+# Written by the example extension when you run it in place.
+/examples/extensions/network-config-*.txt
+/examples/extensions/security-events-*.txt
