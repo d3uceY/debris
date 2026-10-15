@@ -33,15 +33,6 @@ impl Preset {
         }
     }
 
-    pub fn to_text(&self) -> String {
-        let mut out = String::from("# debris preset — one package name per line\n");
-        for package in &self.packages {
-            out.push_str(package);
-            out.push('\n');
-        }
-        out
-    }
-
     pub fn len(&self) -> usize {
         self.packages.len()
     }
@@ -86,12 +77,5 @@ mod tests {
     #[test]
     fn an_empty_document_is_an_empty_preset() {
         assert!(Preset::parse("x", "# nothing here\n").is_empty());
-    }
-
-    #[test]
-    fn round_trips_through_text() {
-        let preset = Preset::parse("x", "A\nB\n");
-        let reparsed = Preset::parse("x", &preset.to_text());
-        assert_eq!(preset.packages, reparsed.packages);
     }
 }

@@ -24,7 +24,7 @@ is neither `###` nor blank, so a `###` comment further down the file is just a c
 | Field | Required | Values |
 |---|---|---|
 | `title` | yes | Human title shown in the list |
-| `category` | yes | `apps`, `privacy`, `shell`, `maintenance` |
+| `category` | yes | `apps`, `shell`, `maintenance` |
 | `risk` | yes | `read-only`, `reversible`, `destructive` |
 | `requires-admin` | yes | `yes` / `no` |
 | `dry-run` | yes | `yes` / `no` |
@@ -51,7 +51,7 @@ field. `crates/debris-core/src/script.rs` owns the parser; the tests there asser
 
 ```powershell
 ### title: Something
-### category: privacy
+### category: apps
 ### risk: reversible
 ### requires-admin: yes
 ### dry-run: yes
@@ -75,15 +75,21 @@ Complete-DebrisRun
 Run it yourself with a preview — this is the only safe way to test one:
 
 ```powershell
-pwsh -NoProfile -File scripts/privacy/disable-unwanted-services.ps1 -DryRun
+pwsh -NoProfile -File scripts/apps/remove-onedrive.ps1 -DryRun
 ```
+
+## Scripts and fixers
+
+A setting that can be described as "this value, in this key" is a **fixer**, not a
+script. A fixer lives in `assets/data/fixers.json`, carries the value Windows ships
+with, and gets a checkbox, a state chip, and a way back for free. Reach for a script
+only when the work cannot be written down that way.
 
 ## Layout
 
 ```
 lib/            shared module: logging, dry-run plumbing, elevation checks
 apps/           install, remove, or restore preinstalled applications
-privacy/        telemetry, background services, network rules
 shell/          Explorer and Start menu
 maintenance/    system housekeeping: cleanup, caches, and resets
 ```
@@ -102,6 +108,6 @@ To check a script by hand without running it:
 
 ```powershell
 [System.Management.Automation.Language.Parser]::ParseFile(
-    (Resolve-Path 'scripts/privacy/block-telemetry.ps1'), [ref]$null, [ref]$errors)
+    (Resolve-Path 'scripts/apps/remove-onedrive.ps1'), [ref]$null, [ref]$errors)
 $errors
 ```

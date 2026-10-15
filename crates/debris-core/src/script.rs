@@ -50,26 +50,23 @@ impl Risk {
 }
 
 /// Which shelf a script sits on. Matches the `scripts/` subdirectories.
+///
+/// There is no privacy shelf. Everything that used to live there is a registry rule,
+/// so it belongs to the fixer catalogue, which can describe it, check it and undo it
+/// in a way a script never could.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Category {
     Apps,
-    Privacy,
     Shell,
     Maintenance,
 }
 
 impl Category {
-    pub const ALL: [Category; 4] = [
-        Category::Apps,
-        Category::Privacy,
-        Category::Shell,
-        Category::Maintenance,
-    ];
+    pub const ALL: [Category; 3] = [Category::Apps, Category::Shell, Category::Maintenance];
 
     pub fn parse(raw: &str) -> Option<Self> {
         match raw.trim().to_ascii_lowercase().as_str() {
             "apps" | "app" => Some(Self::Apps),
-            "privacy" => Some(Self::Privacy),
             "shell" => Some(Self::Shell),
             "maintenance" => Some(Self::Maintenance),
             _ => None,
@@ -79,7 +76,6 @@ impl Category {
     pub fn label(self) -> &'static str {
         match self {
             Self::Apps => "Apps",
-            Self::Privacy => "Privacy",
             Self::Shell => "Shell",
             Self::Maintenance => "Maintenance",
         }
@@ -88,7 +84,6 @@ impl Category {
     pub fn directory(self) -> &'static str {
         match self {
             Self::Apps => "apps",
-            Self::Privacy => "privacy",
             Self::Shell => "shell",
             Self::Maintenance => "maintenance",
         }
