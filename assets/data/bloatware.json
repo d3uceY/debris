@@ -1,0 +1,301 @@
+[
+  {
+    "name": "Cortana",
+    "category": "Microsoft",
+    "package": "Microsoft.549981C3F5F10",
+    "description": "Voice assistant, demoted and largely unused since Windows 11. Windows Search is unaffected."
+  },
+  {
+    "name": "Bing Weather",
+    "category": "Microsoft",
+    "package": "Microsoft.BingWeather",
+    "description": "Weather app. The taskbar widget already shows the forecast."
+  },
+  {
+    "name": "Bing News",
+    "category": "Microsoft",
+    "package": "Microsoft.BingNews",
+    "description": "Bing news feed, replaced by Microsoft Start on newer installs.",
+    "default_selected": true
+  },
+  {
+    "name": "Microsoft Start",
+    "category": "Microsoft",
+    "package": "Microsoft.BingSearch",
+    "description": "Search and news panel bundled with Windows 11."
+  },
+  {
+    "name": "Windows Maps",
+    "category": "Microsoft",
+    "package": "Microsoft.WindowsMaps",
+    "description": "Offline-capable maps app. A browser covers the same ground."
+  },
+  {
+    "name": "Mail and Calendar",
+    "category": "Microsoft",
+    "package": "microsoft.windowscommunicationsapps",
+    "description": "The classic Mail and Calendar client, superseded by the new Outlook."
+  },
+  {
+    "name": "Feedback Hub",
+    "category": "Microsoft",
+    "package": "Microsoft.WindowsFeedbackHub",
+    "description": "Bug reports and feedback to Microsoft. Needed only for the Insider programme."
+  },
+  {
+    "name": "Get Help",
+    "category": "Microsoft",
+    "package": "Microsoft.GetHelp",
+    "description": "Support app that opens a Microsoft help channel."
+  },
+  {
+    "name": "Get Started",
+    "category": "Microsoft",
+    "package": "Microsoft.Getstarted",
+    "description": "The tips app Windows shows after a fresh install.",
+    "default_selected": true
+  },
+  {
+    "name": "Mixed Reality Portal",
+    "category": "Microsoft",
+    "package": "Microsoft.MixedReality.Portal",
+    "description": "Launcher for Windows Mixed Reality headsets.",
+    "default_selected": true
+  },
+  {
+    "name": "3D Viewer",
+    "category": "Microsoft",
+    "package": "Microsoft.Microsoft3DViewer",
+    "description": "3D model viewer bundled with Windows 10.",
+    "default_selected": true
+  },
+  {
+    "name": "Paint 3D",
+    "category": "Microsoft",
+    "package": "Microsoft.MSPaint",
+    "description": "The 3D Paint successor. Removing it leaves classic Paint untouched."
+  },
+  {
+    "name": "Print 3D",
+    "category": "Microsoft",
+    "package": "Microsoft.Print3D",
+    "description": "3D printing app. Useless without a 3D printer attached.",
+    "default_selected": true
+  },
+  {
+    "name": "Alarms and Clock",
+    "category": "Microsoft",
+    "package": "Microsoft.WindowsAlarms",
+    "description": "Alarms, timers and the world clock."
+  },
+  {
+    "name": "Camera",
+    "category": "Microsoft",
+    "package": "Microsoft.WindowsCamera",
+    "description": "Camera app. Superfluous on a desktop with no webcam."
+  },
+  {
+    "name": "Voice Recorder",
+    "category": "Microsoft",
+    "package": "Microsoft.WindowsSoundRecorder",
+    "description": "Basic audio recorder."
+  },
+  {
+    "name": "Sticky Notes",
+    "category": "Microsoft",
+    "package": "Microsoft.MicrosoftStickyNotes",
+    "description": "Notes synced to a Microsoft account."
+  },
+  {
+    "name": "Microsoft Wallet",
+    "category": "Microsoft",
+    "package": "Microsoft.Wallet",
+    "description": "Tap to Pay infrastructure, rarely used on a desktop.",
+    "default_selected": true
+  },
+  {
+    "name": "Messaging",
+    "category": "Microsoft",
+    "package": "Microsoft.Messaging",
+    "description": "Leftover from the Windows 10 Mobile era. No longer functional.",
+    "default_selected": true
+  },
+  {
+    "name": "Family Safety",
+    "category": "Microsoft",
+    "package": "MicrosoftCorporationII.MicrosoftFamily",
+    "description": "Parental controls and screen time limits."
+  },
+  {
+    "name": "Power Automate",
+    "category": "Microsoft",
+    "package": "Microsoft.PowerAutomateDesktop",
+    "description": "Desktop automation aimed at enterprise users."
+  },
+  {
+    "name": "Microsoft To Do",
+    "category": "Microsoft",
+    "package": "Microsoft.Todos",
+    "description": "Task list app."
+  },
+  {
+    "name": "People",
+    "category": "Microsoft",
+    "package": "Microsoft.People",
+    "description": "Contacts app, once tied to Mail and Calendar. Redundant now."
+  },
+  {
+    "name": "Microsoft Whiteboard",
+    "category": "Microsoft",
+    "package": "Microsoft.Whiteboard",
+    "description": "Digital whiteboard. Mostly useful on a touchscreen or Surface."
+  },
+  {
+    "name": "Dev Home",
+    "category": "Microsoft",
+    "package": "Microsoft.Windows.DevHome",
+    "description": "Developer dashboard from Microsoft."
+  },
+  {
+    "name": "Microsoft Copilot",
+    "category": "Microsoft",
+    "package": "Microsoft.Copilot",
+    "description": "The Copilot assistant app."
+  },
+  {
+    "name": "Phone Link",
+    "category": "Microsoft",
+    "package": "Microsoft.YourPhone",
+    "description": "Links an Android phone to Windows for notifications and file transfer."
+  },
+
+  {
+    "name": "Office Hub",
+    "category": "Office",
+    "package": "Microsoft.MicrosoftOfficeHub",
+    "description": "A prompt to buy Microsoft 365. Does nothing if you already have Office.",
+    "default_selected": true
+  },
+  {
+    "name": "OneNote",
+    "category": "Office",
+    "package": "Microsoft.Office.OneNote",
+    "description": "The Store build of OneNote. The desktop version Office installs is separate."
+  },
+  {
+    "name": "OneDrive",
+    "category": "Office",
+    "package": "Microsoft.OneDriveSync",
+    "description": "The Store entry for OneDrive. The desktop sync client is separate and unaffected."
+  },
+  {
+    "name": "Skype",
+    "category": "Office",
+    "package": "Microsoft.SkypeApp",
+    "description": "Consumer Skype bundled with Windows.",
+    "default_selected": true
+  },
+  {
+    "name": "Microsoft Teams",
+    "category": "Office",
+    "package": "MicrosoftTeams",
+    "description": "The personal Teams build, not the work or school client."
+  },
+  {
+    "name": "Clipchamp",
+    "category": "Office",
+    "package": "Clipchamp.Clipchamp",
+    "description": "Video editor bundled since Windows 11 22H2."
+  },
+
+  {
+    "name": "Groove Music",
+    "category": "Media",
+    "package": "Microsoft.ZuneMusic",
+    "description": "Discontinued music player, still present on older Windows 10 installs.",
+    "default_selected": true
+  },
+  {
+    "name": "Movies and TV",
+    "category": "Media",
+    "package": "Microsoft.ZuneVideo",
+    "description": "Local video player. VLC or MPC-HC do the same job."
+  },
+  {
+    "name": "Spotify",
+    "category": "Media",
+    "package": "SpotifyAB.SpotifyMusic",
+    "description": "The Store build of Spotify. Separate from a copy installed from the website."
+  },
+  {
+    "name": "Netflix",
+    "category": "Media",
+    "package": "4DF9E0F8.Netflix",
+    "description": "Netflix Store app, sometimes preinstalled by a manufacturer."
+  },
+
+  {
+    "name": "Xbox Game Bar",
+    "category": "Gaming",
+    "package": "Microsoft.XboxGamingOverlay",
+    "description": "The Win+G overlay. It can also be switched off in Settings under Gaming."
+  },
+  {
+    "name": "Xbox Identity Provider",
+    "category": "Gaming",
+    "package": "Microsoft.XboxIdentityProvider",
+    "description": "Sign-in broker for Xbox services and Game Pass."
+  },
+  {
+    "name": "Xbox App Services",
+    "category": "Gaming",
+    "package": "Microsoft.Xbox.TCUI",
+    "description": "Shared services for the Xbox apps. Only remove it with the rest of them."
+  },
+  {
+    "name": "Solitaire Collection",
+    "category": "Gaming",
+    "package": "Microsoft.MicrosoftSolitaireCollection",
+    "description": "Klondike, FreeCell and Spider, now ad-supported."
+  },
+  {
+    "name": "Candy Crush Saga",
+    "category": "Gaming",
+    "package": "king.com.CandyCrushSaga",
+    "description": "Preinstalled Candy Crush. A reset can put it back.",
+    "default_selected": true
+  },
+  {
+    "name": "Candy Crush Soda Saga",
+    "category": "Gaming",
+    "package": "king.com.CandyCrushSodaSaga",
+    "description": "The second preinstalled Candy Crush title.",
+    "default_selected": true
+  },
+
+  {
+    "name": "TikTok",
+    "category": "Social",
+    "package": "TikTok.TikTok",
+    "description": "TikTok Store app, preinstalled on some new machines."
+  },
+  {
+    "name": "Facebook",
+    "category": "Social",
+    "package": "Facebook.Facebook",
+    "description": "Facebook Store app, sometimes bundled by a manufacturer."
+  },
+  {
+    "name": "Instagram",
+    "category": "Social",
+    "package": "Instagram",
+    "description": "Instagram Store app.",
+    "default_selected": true
+  },
+  {
+    "name": "Twitter",
+    "category": "Social",
+    "package": "Twitter.Twitter",
+    "description": "Twitter Store app."
+  }
+]
