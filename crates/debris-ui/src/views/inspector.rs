@@ -30,7 +30,9 @@ pub fn inspector<T: DebrisApp>(
 ) -> AnyElement {
     let subtitle = match snapshot.screen {
         Screen::Packages => "The package under the cursor",
+        Screen::Fixers => "The fixer catalogue and its states",
         Screen::Scripts => "The library and its vocabulary",
+        Screen::Extensions => "How a catalogue is read",
         Screen::Presets => "How a preset is applied",
     };
 
@@ -55,8 +57,10 @@ pub fn inspector<T: DebrisApp>(
 
     let body: AnyElement = match snapshot.screen {
         Screen::Packages => package_detail::<T>(theme, snapshot, cx),
+        Screen::Fixers => fixer_detail(theme),
         Screen::Scripts => library_detail(theme),
-        Screen::Presets => preset_detail(theme, snapshot),
+        Screen::Extensions => extension_detail(theme),
+        Screen::Presets => preset_detail(theme),
     };
 
     div()
@@ -136,6 +140,16 @@ fn package_detail<T: DebrisApp>(
             description_row(theme, "Version", package.version.clone(), true),
             description_row(
                 theme,
+                "Category",
+                snapshot
+                    .bloat
+                    .category_of(&package.name)
+                    .unwrap_or("Not catalogued")
+                    .to_string(),
+                false,
+            ),
+            description_row(
+                theme,
                 "Staged",
                 if staged { "Yes, in the queue" } else { "No" },
                 false,
@@ -153,6 +167,16 @@ fn package_detail<T: DebrisApp>(
     );
 
     let mut sections = vec![facts, identity];
+
+    // What the catalogue says this package is. Advisory text, and the only place the
+    // app can answer "do I want this?" rather than "what is this?".
+    if let Some(description) = snapshot.bloat.describe(&package.name) {
+        sections.push(group(
+            theme,
+            "WHAT IT IS",
+            vec![prose(theme, description)],
+        ));
+    }
 
     if let Some(caveat) = package_caveat(package, staged) {
         sections.push(group(
@@ -205,6 +229,72 @@ fn package_detail<T: DebrisApp>(
         .flex_col()
         .gap(px(space::LG))
         .children(sections)
+        .into_any_element()
+}
+
+/// The fixer legend: the two ways back, and why there is one.
+///
+/// Deliberately not a legend for the state chips. `already set` and `not set` are
+/// plain English and each row carries its own, so a table repeating them would be a
+/// second copy of the row to keep in sync, not an explanation.
+fn fixer_detail(theme: &Theme) -> AnyElement {
+    div()
+        .flex()
+        .flex_col()
+        .gap(px(space::LG))
+        .child(group(
+            theme,
+            "HOW A RUN WORKS",
+            vec![
+                prose(
+                    theme,
+                    "Ticking a box writes nothing. Run writes every ticked rule in one pass, and reports each one.",
+                ),
+                prose(
+                    theme,
+                    "Restore puts a ticked rule back to the value Windows ships with, or removes it where Windows ships nothing.",
+                ),
+                sub_prose(
+                    theme,
+                    "That Windows default is the field that makes the way back possible. A rule without one cannot be restored.",
+                ),
+            ],
+        ))
+        .into_any_element()
+}
+
+/// The extension legend: what a catalogue is, and the two steps between listing and
+/// running.
+fn extension_detail(theme: &Theme) -> AnyElement {
+    div()
+        .flex()
+        .flex_col()
+        .gap(px(space::LG))
+        .child(group(
+            theme,
+            "CATALOGUES",
+            vec![
+                prose(
+                    theme,
+                    "A catalogue is a JSON file that lists scripts and the address of each one.",
+                ),
+                prose(
+                    theme,
+                    "No script runs until you install it and confirm.",
+                ),
+            ],
+        ))
+        .child(group(
+            theme,
+            "ENTRY FORMAT",
+            vec![
+                code_block(theme, "{ name, description, url, version, requiresAdmin, sha256 }"),
+                sub_prose(
+                    theme,
+                    "url has to point at a .ps1. When a catalogue publishes a sha256, a download that does not match it is discarded.",
+                ),
+            ],
+        ))
         .into_any_element()
 }
 
@@ -287,47 +377,23 @@ fn library_detail(theme: &Theme) -> AnyElement {
         .into_any_element()
 }
 
-fn preset_detail(theme: &Theme, snapshot: &Snapshot) -> AnyElement {
-    let total: usize = snapshot.presets.iter().map(|preset| preset.len()).sum();
+fn preset_detail(theme: &Theme) -> AnyElement {
 
     let about = group(
         theme,
         "WHAT A PRESET DOES",
         vec![prose(
             theme,
-            "Loading a preset replaces the removal queue. It never removes anything. The confirming button stays on the Packages surface.",
+            "Loads a list of recommended package unintalls",
         )],
     );
 
-    let counted = group(
-        theme,
-        "ON THIS MACHINE",
-        vec![
-            description_row(theme, "Presets", snapshot.presets.len().to_string(), true),
-            description_row(theme, "Names", total.to_string(), true),
-            description_row(theme, "Queue", snapshot.staged.len().to_string(), true),
-        ],
-    );
-
-    let format = group(
-        theme,
-        "FILE FORMAT",
-        vec![
-            prose(
-                theme,
-                "One package name per line. Comments start with #. Drop a file into assets/data/presets and it appears here.",
-            ),
-            code_block(theme, "Microsoft.BingNews\nMicrosoft.BingWeather"),
-        ],
-    );
 
     div()
         .flex()
         .flex_col()
         .gap(px(space::LG))
         .child(about)
-        .child(counted)
-        .child(format)
         .into_any_element()
 }
 
