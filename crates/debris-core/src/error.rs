@@ -3,9 +3,8 @@ use std::path::PathBuf;
 
 /// Everything that can go wrong while reading the world.
 ///
-/// There is no `#[from]` machinery here on purpose: this enum is small, the
-/// messages are user-facing, and hand-writing `Display` keeps the crate
-/// dependency-free and the wording under our control.
+/// There is no `#[from]` machinery here on purpose: this enum is small and the
+/// messages are user-facing, so they are written by hand rather than derived.
 #[derive(Debug)]
 pub enum DebrisError {
     /// A file could not be read.
@@ -17,6 +16,10 @@ pub enum DebrisError {
     ScriptHeader { path: PathBuf, detail: String },
     /// No script library was found where one was expected.
     LibraryMissing { path: PathBuf },
+    /// A JSON catalogue does not parse, or does not hold what it claims to.
+    Catalog { detail: String },
+    /// A URL is not one this app will fetch.
+    Url { detail: String },
     /// A process could not be started at all.
     Process {
         program: String,
@@ -38,6 +41,8 @@ impl fmt::Display for DebrisError {
             DebrisError::LibraryMissing { path } => {
                 write!(f, "no script library at {}", path.display())
             }
+            DebrisError::Catalog { detail } => write!(f, "the catalogue is unusable: {detail}"),
+            DebrisError::Url { detail } => write!(f, "{detail}"),
             DebrisError::Process { program, source } => {
                 write!(f, "could not start {program}: {source}")
             }

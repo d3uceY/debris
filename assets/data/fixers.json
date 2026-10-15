@@ -1,0 +1,1127 @@
+[
+  {
+    "name": "Disable File Explorer Ads",
+    "category": "Ads",
+    "description": "Stops OneDrive and Office promos appearing in the File Explorer status bar.",
+    "default_selected": true,
+    "entries": [
+      {
+        "hive": "HKCU",
+        "key": "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+        "value_name": "ShowSyncProviderNotifications",
+        "kind": "dword",
+        "recommended": "0",
+        "default": "1"
+      }
+    ]
+  },
+  {
+    "name": "Disable Finish Setup Ads",
+    "category": "Ads",
+    "description": "Stops Windows showing setup prompts and app ads after a new profile is created.",
+    "default_selected": true,
+    "entries": [
+      {
+        "hive": "HKCU",
+        "key": "Software\\Microsoft\\Windows\\CurrentVersion\\UserProfileEngagement",
+        "value_name": "ScoobeSystemSettingEnabled",
+        "kind": "dword",
+        "recommended": "0",
+        "default": "1"
+      }
+    ]
+  },
+  {
+    "name": "Disable Lock Screen Ads",
+    "category": "Ads",
+    "description": "Removes Spotlight ads and the overlay from the lock screen.",
+    "default_selected": true,
+    "entries": [
+      {
+        "hive": "HKCU",
+        "key": "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+        "value_name": "RotatingLockScreenOverlayEnabled",
+        "kind": "dword",
+        "recommended": "0",
+        "default": "1"
+      },
+      {
+        "hive": "HKCU",
+        "key": "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+        "value_name": "SubscribedContent-338387Enabled",
+        "kind": "dword",
+        "recommended": "0",
+        "default": "1"
+      }
+    ]
+  },
+  {
+    "name": "Disable Personalized Ads",
+    "category": "Ads",
+    "description": "Turns off the advertising ID that apps use to personalize ads.",
+    "default_selected": true,
+    "entries": [
+      {
+        "hive": "HKCU",
+        "key": "Software\\Microsoft\\Windows\\CurrentVersion\\AdvertisingInfo",
+        "value_name": "Enabled",
+        "kind": "dword",
+        "recommended": "0",
+        "default": "1"
+      }
+    ]
+  },
+  {
+    "name": "Disable Settings App Ads",
+    "category": "Ads",
+    "description": "Removes account, Office and app suggestions from the Settings app.",
+    "default_selected": true,
+    "entries": [
+      {
+        "hive": "HKCU",
+        "key": "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+        "value_name": "SubscribedContent-338393Enabled",
+        "kind": "dword",
+        "recommended": "0",
+        "default": "1"
+      },
+      {
+        "hive": "HKCU",
+        "key": "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+        "value_name": "SubscribedContent-353694Enabled",
+        "kind": "dword",
+        "recommended": "0",
+        "default": "1"
+      },
+      {
+        "hive": "HKCU",
+        "key": "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+        "value_name": "SubscribedContent-353696Enabled",
+        "kind": "dword",
+        "recommended": "0",
+        "default": "1"
+      }
+    ]
+  },
+  {
+    "name": "Disable Start Menu Ads",
+    "category": "Ads",
+    "description": "Removes app recommendations from the Start menu. Windows 11.",
+    "default_selected": true,
+    "entries": [
+      {
+        "hive": "HKCU",
+        "key": "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+        "value_name": "Start_IrisRecommendations",
+        "kind": "dword",
+        "recommended": "0",
+        "default": "1"
+      }
+    ]
+  },
+  {
+    "name": "Disable Tailored Experiences",
+    "category": "Ads",
+    "description": "Stops diagnostic data being used to target tips and recommendations.",
+    "default_selected": true,
+    "entries": [
+      {
+        "hive": "HKCU",
+        "key": "Software\\Microsoft\\Windows\\CurrentVersion\\Privacy",
+        "value_name": "TailoredExperiencesWithDiagnosticDataEnabled",
+        "kind": "dword",
+        "recommended": "0",
+        "default": "1"
+      },
+      {
+        "hive": "HKCU",
+        "key": "Software\\Policies\\Microsoft\\Windows\\CloudContent",
+        "value_name": "DisableTailoredExperiencesWithDiagnosticData",
+        "kind": "dword",
+        "recommended": "1",
+        "default": "0"
+      },
+      {
+        "hive": "HKLM",
+        "key": "Software\\Policies\\Microsoft\\Windows\\CloudContent",
+        "value_name": "DisableTailoredExperiencesWithDiagnosticData",
+        "kind": "dword",
+        "recommended": "1",
+        "default": "0"
+      }
+    ]
+  },
+  {
+    "name": "Disable Tips and Suggestions",
+    "category": "Ads",
+    "description": "Turns off the Windows tips that appear on the lock screen and in notifications.",
+    "default_selected": true,
+    "entries": [
+      {
+        "hive": "HKCU",
+        "key": "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+        "value_name": "SubscribedContent-338389Enabled",
+        "kind": "dword",
+        "recommended": "0",
+        "default": "1"
+      }
+    ]
+  },
+  {
+    "name": "Disable Welcome Experience Ads",
+    "category": "Ads",
+    "description": "Hides the \"what's new\" screen that appears after a feature update.",
+    "default_selected": true,
+    "entries": [
+      {
+        "hive": "HKCU",
+        "key": "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+        "value_name": "SubscribedContent-310093Enabled",
+        "kind": "dword",
+        "recommended": "0",
+        "default": "1"
+      }
+    ]
+  },
+
+  {
+    "name": "Disable Click To Do",
+    "category": "AI",
+    "description": "Turns off the Click To Do overlay. Windows 11.",
+    "default_selected": true,
+    "os": 11,
+    "entries": [
+      {
+        "hive": "HKCU",
+        "key": "Software\\Microsoft\\Windows\\Shell\\ClickToDo",
+        "value_name": "DisableClickToDo",
+        "kind": "dword",
+        "recommended": "1",
+        "default": "0"
+      }
+    ]
+  },
+  {
+    "name": "Disable Copilot on Taskbar",
+    "category": "AI",
+    "description": "Removes the Copilot button from the taskbar.",
+    "restart": "system",
+    "entries": [
+      {
+        "hive": "HKCU",
+        "key": "Software\\Policies\\Microsoft\\Windows\\WindowsCopilot",
+        "value_name": "TurnOffWindowsCopilot",
+        "kind": "dword",
+        "recommended": "1",
+        "default": "0"
+      }
+    ]
+  },
+  {
+    "name": "Disable Recall",
+    "category": "AI",
+    "description": "Stops Recall, the screenshot indexer, being switched on. Windows 11 on Copilot+ hardware.",
+    "os": 11,
+    "restart": "system",
+    "entries": [
+      {
+        "hive": "HKLM",
+        "key": "SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsAI",
+        "value_name": "AllowRecallEnablement",
+        "kind": "dword",
+        "recommended": "0",
+        "default": "1"
+      }
+    ]
+  },
+  {
+    "name": "Disable Search Box Suggestions",
+    "category": "AI",
+    "description": "Stops the Start menu search box sending what you type to the web.",
+    "default_selected": true,
+    "entries": [
+      {
+        "hive": "HKCU",
+        "key": "Software\\Policies\\Microsoft\\Windows\\Explorer",
+        "value_name": "DisableSearchBoxSuggestions",
+        "kind": "dword",
+        "recommended": "1",
+        "default": "0"
+      }
+    ]
+  },
+
+  {
+    "name": "Disable Edge Browser Sign-in",
+    "category": "Edge",
+    "description": "Stops Edge asking you to sign in with a Microsoft account.",
+    "default_selected": true,
+    "entries": [
+      {
+        "hive": "HKLM",
+        "key": "Software\\Policies\\Microsoft\\Edge",
+        "value_name": "BrowserSignin",
+        "kind": "dword",
+        "recommended": "0",
+        "default": "<deletevalue>"
+      }
+    ]
+  },
+  {
+    "name": "Disable Edge Default Top Sites",
+    "category": "Edge",
+    "description": "Hides the MSN and Office shortcuts on the Edge new tab page.",
+    "default_selected": true,
+    "entries": [
+      {
+        "hive": "HKLM",
+        "key": "Software\\Policies\\Microsoft\\Edge",
+        "value_name": "NewTabPageHideDefaultTopSites",
+        "kind": "dword",
+        "recommended": "1",
+        "default": "<deletevalue>"
+      }
+    ]
+  },
+  {
+    "name": "Disable Edge Default Browser Prompt",
+    "category": "Edge",
+    "description": "Stops Edge asking to be made the default browser.",
+    "default_selected": true,
+    "entries": [
+      {
+        "hive": "HKLM",
+        "key": "Software\\Policies\\Microsoft\\Edge",
+        "value_name": "DefaultBrowserSettingEnabled",
+        "kind": "dword",
+        "recommended": "0",
+        "default": "<deletevalue>"
+      }
+    ]
+  },
+  {
+    "name": "Disable Edge Collections",
+    "category": "Edge",
+    "description": "Turns off the Collections feature.",
+    "default_selected": true,
+    "entries": [
+      {
+        "hive": "HKLM",
+        "key": "Software\\Policies\\Microsoft\\Edge",
+        "value_name": "EdgeCollectionsEnabled",
+        "kind": "dword",
+        "recommended": "0",
+        "default": "<deletevalue>"
+      }
+    ]
+  },
+  {
+    "name": "Disable Edge Shopping Assistant",
+    "category": "Edge",
+    "description": "Turns off the price comparison sidebar.",
+    "default_selected": true,
+    "entries": [
+      {
+        "hive": "HKLM",
+        "key": "Software\\Policies\\Microsoft\\Edge",
+        "value_name": "EdgeShoppingAssistantEnabled",
+        "kind": "dword",
+        "recommended": "0",
+        "default": "<deletevalue>"
+      }
+    ]
+  },
+  {
+    "name": "Disable Edge First Run Experience",
+    "category": "Edge",
+    "description": "Skips the welcome page after a fresh install or update.",
+    "default_selected": true,
+    "entries": [
+      {
+        "hive": "HKLM",
+        "key": "Software\\Policies\\Microsoft\\Edge",
+        "value_name": "HideFirstRunExperience",
+        "kind": "dword",
+        "recommended": "1",
+        "default": "<deletevalue>"
+      }
+    ]
+  },
+  {
+    "name": "Disable Edge Gamer Mode",
+    "category": "Edge",
+    "description": "Turns off Gamer Mode.",
+    "default_selected": true,
+    "entries": [
+      {
+        "hive": "HKLM",
+        "key": "Software\\Policies\\Microsoft\\Edge",
+        "value_name": "GamerModeEnabled",
+        "kind": "dword",
+        "recommended": "0",
+        "default": "<deletevalue>"
+      }
+    ]
+  },
+  {
+    "name": "Disable Edge Hubs Sidebar",
+    "category": "Edge",
+    "description": "Removes the Discover and Tools sidebar.",
+    "default_selected": true,
+    "entries": [
+      {
+        "hive": "HKCU",
+        "key": "Software\\Policies\\Microsoft\\Edge",
+        "value_name": "HubsSidebarEnabled",
+        "kind": "dword",
+        "recommended": "0",
+        "default": "<deletevalue>"
+      }
+    ]
+  },
+  {
+    "name": "Disable Edge Import on Launch",
+    "category": "Edge",
+    "description": "Stops Edge offering to import data from another browser every time it opens.",
+    "default_selected": true,
+    "entries": [
+      {
+        "hive": "HKLM",
+        "key": "Software\\Policies\\Microsoft\\Edge",
+        "value_name": "ImportOnEachLaunch",
+        "kind": "dword",
+        "recommended": "0",
+        "default": "<deletevalue>"
+      }
+    ]
+  },
+  {
+    "name": "Disable Edge Startup Boost",
+    "category": "Edge",
+    "description": "Stops Edge staying resident in the background after it is closed.",
+    "default_selected": true,
+    "entries": [
+      {
+        "hive": "HKLM",
+        "key": "Software\\Policies\\Microsoft\\Edge",
+        "value_name": "StartupBoostEnabled",
+        "kind": "dword",
+        "recommended": "0",
+        "default": "<deletevalue>"
+      }
+    ]
+  },
+  {
+    "name": "Disable Edge New Tab Quick Links",
+    "category": "Edge",
+    "description": "Hides the quick link tiles on the new tab page.",
+    "default_selected": true,
+    "entries": [
+      {
+        "hive": "HKLM",
+        "key": "Software\\Policies\\Microsoft\\Edge",
+        "value_name": "NewTabPageQuickLinksEnabled",
+        "kind": "dword",
+        "recommended": "0",
+        "default": "<deletevalue>"
+      }
+    ]
+  },
+  {
+    "name": "Disable Edge User Feedback",
+    "category": "Edge",
+    "description": "Stops Edge sending feedback to Microsoft.",
+    "default_selected": true,
+    "entries": [
+      {
+        "hive": "HKLM",
+        "key": "Software\\Policies\\Microsoft\\Edge",
+        "value_name": "UserFeedbackAllowed",
+        "kind": "dword",
+        "recommended": "0",
+        "default": "<deletevalue>"
+      }
+    ]
+  },
+
+  {
+    "name": "Disable Game DVR",
+    "category": "Gaming",
+    "description": "Turns off background game recording, which costs CPU while you play.",
+    "default_selected": true,
+    "entries": [
+      {
+        "hive": "HKCU",
+        "key": "System\\GameConfigStore",
+        "value_name": "GameDVR_Enabled",
+        "kind": "dword",
+        "recommended": "0",
+        "default": "1"
+      },
+      {
+        "hive": "HKCU",
+        "key": "System\\GameConfigStore",
+        "value_name": "GameDVR_FSEBehaviorMode",
+        "kind": "dword",
+        "recommended": "2",
+        "default": "0"
+      },
+      {
+        "hive": "HKLM",
+        "key": "SOFTWARE\\Microsoft\\PolicyManager\\default\\ApplicationManagement\\AllowGameDVR",
+        "value_name": "value",
+        "kind": "dword",
+        "recommended": "0",
+        "default": "1"
+      }
+    ]
+  },
+  {
+    "name": "Disable Power Throttling",
+    "category": "Gaming",
+    "description": "Lets the CPU run at full speed instead of throttling background processes.",
+    "entries": [
+      {
+        "hive": "HKLM",
+        "key": "SYSTEM\\CurrentControlSet\\Control\\Power\\PowerThrottling",
+        "value_name": "PowerThrottlingOff",
+        "kind": "dword",
+        "recommended": "1",
+        "default": "0"
+      }
+    ]
+  },
+  {
+    "name": "Optimize Visual Effects for Performance",
+    "category": "Gaming",
+    "description": "Sets Windows visual effects to \"adjust for best performance\".",
+    "entries": [
+      {
+        "hive": "HKCU",
+        "key": "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\VisualEffects",
+        "value_name": "VisualFXSetting",
+        "kind": "dword",
+        "recommended": "2",
+        "default": "0"
+      }
+    ]
+  },
+
+  {
+    "name": "Disable Activity History",
+    "category": "Privacy",
+    "description": "Stops Windows recording which apps and files you use for the Timeline.",
+    "default_selected": true,
+    "entries": [
+      {
+        "hive": "HKLM",
+        "key": "SOFTWARE\\Policies\\Microsoft\\Windows\\System",
+        "value_name": "PublishUserActivities",
+        "kind": "dword",
+        "recommended": "0",
+        "default": "1"
+      }
+    ]
+  },
+  {
+    "name": "Disable App Launch Tracking",
+    "category": "Privacy",
+    "description": "Stops apps you open feeding the Start menu's suggestion list.",
+    "default_selected": true,
+    "entries": [
+      {
+        "hive": "HKCU",
+        "key": "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+        "value_name": "Start_TrackProgs",
+        "kind": "dword",
+        "recommended": "0",
+        "default": "1"
+      }
+    ]
+  },
+  {
+    "name": "Reduce Diagnostic Data",
+    "category": "Privacy",
+    "description": "Sets Windows telemetry to the lowest level the edition allows.",
+    "default_selected": true,
+    "entries": [
+      {
+        "hive": "HKCU",
+        "key": "SOFTWARE\\Policies\\Microsoft\\Windows\\DataCollection",
+        "value_name": "AllowTelemetry",
+        "kind": "dword",
+        "recommended": "1",
+        "default": "3"
+      },
+      {
+        "hive": "HKLM",
+        "key": "SOFTWARE\\Policies\\Microsoft\\Windows\\DataCollection",
+        "value_name": "AllowTelemetry",
+        "kind": "dword",
+        "recommended": "1",
+        "default": "3"
+      },
+      {
+        "hive": "HKCU",
+        "key": "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\DataCollection",
+        "value_name": "AllowTelemetry",
+        "kind": "dword",
+        "recommended": "1",
+        "default": "3"
+      },
+      {
+        "hive": "HKLM",
+        "key": "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\DataCollection",
+        "value_name": "AllowTelemetry",
+        "kind": "dword",
+        "recommended": "1",
+        "default": "3"
+      }
+    ]
+  },
+  {
+    "name": "Disable Location Tracking",
+    "category": "Privacy",
+    "description": "Turns the Windows location service off for every app.",
+    "default_selected": true,
+    "entries": [
+      {
+        "hive": "HKCU",
+        "key": "Software\\Microsoft\\Windows\\CurrentVersion\\LocationAndSensors",
+        "value_name": "LocationEnabled",
+        "kind": "dword",
+        "recommended": "0",
+        "default": "1"
+      }
+    ]
+  },
+  {
+    "name": "Disable Lock Screen Slideshow",
+    "category": "Privacy",
+    "description": "Turns off the lock screen slideshow, which can draw on your own pictures.",
+    "default_selected": true,
+    "entries": [
+      {
+        "hive": "HKCU",
+        "key": "Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+        "value_name": "SlideshowEnabled",
+        "kind": "dword",
+        "recommended": "0",
+        "default": "1"
+      }
+    ]
+  },
+  {
+    "name": "Disable Narrator Online Services",
+    "category": "Privacy",
+    "description": "Stops Narrator sending data to Microsoft.",
+    "default_selected": true,
+    "entries": [
+      {
+        "hive": "HKCU",
+        "key": "Software\\Microsoft\\Narrator\\NoRoam",
+        "value_name": "OnlineServicesEnabled",
+        "kind": "dword",
+        "recommended": "0",
+        "default": "1"
+      }
+    ]
+  },
+  {
+    "name": "Disable Online Speech Recognition",
+    "category": "Privacy",
+    "description": "Turns off cloud speech recognition and input personalization.",
+    "default_selected": true,
+    "entries": [
+      {
+        "hive": "HKCU",
+        "key": "Software\\Microsoft\\Speech_OneCore\\Settings\\OnlineSpeechPrivacy",
+        "value_name": "HasAccepted",
+        "kind": "dword",
+        "recommended": "0",
+        "default": "1"
+      },
+      {
+        "hive": "HKCU",
+        "key": "SOFTWARE\\Policies\\Microsoft\\InputPersonalization",
+        "value_name": "AllowInputPersonalization",
+        "kind": "dword",
+        "recommended": "0",
+        "default": "1"
+      },
+      {
+        "hive": "HKLM",
+        "key": "SOFTWARE\\Policies\\Microsoft\\InputPersonalization",
+        "value_name": "AllowInputPersonalization",
+        "kind": "dword",
+        "recommended": "0",
+        "default": "1"
+      }
+    ]
+  },
+  {
+    "name": "Disable Silent App Installation",
+    "category": "Privacy",
+    "description": "Stops Windows installing suggested apps in the background.",
+    "default_selected": true,
+    "entries": [
+      {
+        "hive": "HKCU",
+        "key": "Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+        "value_name": "SilentInstalledAppsEnabled",
+        "kind": "dword",
+        "recommended": "0",
+        "default": "1"
+      }
+    ]
+  },
+  {
+    "name": "Disable Windows Spotlight Lock Screen",
+    "category": "Privacy",
+    "description": "Stops Microsoft-curated images and tips replacing your lock screen picture.",
+    "default_selected": true,
+    "entries": [
+      {
+        "hive": "HKCU",
+        "key": "Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+        "value_name": "RotatingLockScreenEnabled",
+        "kind": "dword",
+        "recommended": "0",
+        "default": "1"
+      }
+    ]
+  },
+
+  {
+    "name": "Show BSOD Details",
+    "category": "System",
+    "description": "Puts the stop code back on a blue screen, in place of the sad face.",
+    "default_selected": true,
+    "entries": [
+      {
+        "hive": "HKLM",
+        "key": "System\\CurrentControlSet\\Control\\CrashControl",
+        "value_name": "DisplayParameters",
+        "kind": "dword",
+        "recommended": "1",
+        "default": "0"
+      },
+      {
+        "hive": "HKLM",
+        "key": "System\\CurrentControlSet\\Control\\CrashControl",
+        "value_name": "DisableEmoticon",
+        "kind": "dword",
+        "recommended": "1",
+        "default": "0"
+      }
+    ]
+  },
+  {
+    "name": "Disable Hibernation",
+    "category": "System",
+    "description": "Frees a hidden file the size of your RAM. Costs you hibernate and fast startup.",
+    "restart": "system",
+    "entries": [
+      {
+        "hive": "HKLM",
+        "key": "SYSTEM\\CurrentControlSet\\Control\\Power",
+        "value_name": "HibernateEnabled",
+        "kind": "dword",
+        "recommended": "0",
+        "default": "1"
+      },
+      {
+        "hive": "HKLM",
+        "key": "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FlyoutMenuSettings",
+        "value_name": "ShowHibernateOption",
+        "kind": "dword",
+        "recommended": "0",
+        "default": "1"
+      }
+    ]
+  },
+  {
+    "name": "Reduce Menu Show Delay",
+    "category": "System",
+    "description": "Cuts the submenu hover delay from 400ms to 10ms. A value already below 10ms would go up.",
+    "default_selected": true,
+    "entries": [
+      {
+        "hive": "HKCU",
+        "key": "Control Panel\\Desktop",
+        "value_name": "MenuShowDelay",
+        "kind": "string",
+        "recommended": "10",
+        "default": "400"
+      }
+    ]
+  },
+  {
+    "name": "Disable Network Throttling",
+    "category": "System",
+    "description": "Removes the multimedia networking throttle that caps throughput for background work.",
+    "default_selected": true,
+    "entries": [
+      {
+        "hive": "HKLM",
+        "key": "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile",
+        "value_name": "NetworkThrottlingIndex",
+        "kind": "dword",
+        "recommended": "4294967295",
+        "default": "10"
+      }
+    ]
+  },
+  {
+    "name": "Speed Up Shutdown",
+    "category": "System",
+    "description": "Cuts the wait for services to stop on shutdown from five seconds to one.",
+    "default_selected": true,
+    "entries": [
+      {
+        "hive": "HKLM",
+        "key": "SYSTEM\\CurrentControlSet\\Control",
+        "value_name": "WaitToKillServiceTimeout",
+        "kind": "string",
+        "recommended": "1000",
+        "default": "5000"
+      }
+    ]
+  },
+  {
+    "name": "Optimize Multimedia CPU Priority",
+    "category": "System",
+    "description": "Reserves 10% of CPU for background work instead of 20%. A value already below 10 would go up.",
+    "default_selected": true,
+    "entries": [
+      {
+        "hive": "HKLM",
+        "key": "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile",
+        "value_name": "SystemResponsiveness",
+        "kind": "dword",
+        "recommended": "10",
+        "default": "20"
+      }
+    ]
+  },
+  {
+    "name": "Show Verbose Status Messages",
+    "category": "System",
+    "description": "Replaces \"please wait\" with the specific step startup and shutdown are on.",
+    "restart": "system",
+    "entries": [
+      {
+        "hive": "HKLM",
+        "key": "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System",
+        "value_name": "VerboseStatus",
+        "kind": "dword",
+        "recommended": "1",
+        "default": "0"
+      }
+    ]
+  },
+
+  {
+    "name": "Always Show All Tray Icons",
+    "category": "Taskbar",
+    "description": "Stops notification icons hiding behind the arrow. Windows 10.",
+    "default_selected": true,
+    "os": 10,
+    "entries": [
+      {
+        "hive": "HKCU",
+        "key": "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer",
+        "value_name": "EnableAutoTray",
+        "kind": "dword",
+        "recommended": "0",
+        "default": "1"
+      }
+    ]
+  },
+  {
+    "name": "Disable News and Interests",
+    "category": "Taskbar",
+    "description": "Removes the weather and news widget from the taskbar. Windows 10.",
+    "default_selected": true,
+    "os": 10,
+    "entries": [
+      {
+        "hive": "HKCU",
+        "key": "Software\\Policies\\Microsoft\\Windows\\Windows Feeds",
+        "value_name": "EnableFeeds",
+        "kind": "dword",
+        "recommended": "0",
+        "default": "1"
+      },
+      {
+        "hive": "HKLM",
+        "key": "Software\\Policies\\Microsoft\\Windows\\Windows Feeds",
+        "value_name": "EnableFeeds",
+        "kind": "dword",
+        "recommended": "0",
+        "default": "1"
+      }
+    ]
+  },
+  {
+    "name": "Disable Widgets",
+    "category": "Taskbar",
+    "description": "Removes the Widgets button from the taskbar. Windows 11.",
+    "default_selected": true,
+    "os": 11,
+    "entries": [
+      {
+        "hive": "HKCU",
+        "key": "Software\\Policies\\Microsoft\\Dsh",
+        "value_name": "AllowNewsAndInterests",
+        "kind": "dword",
+        "recommended": "0",
+        "default": "1"
+      },
+      {
+        "hive": "HKLM",
+        "key": "Software\\Policies\\Microsoft\\Dsh",
+        "value_name": "AllowNewsAndInterests",
+        "kind": "dword",
+        "recommended": "0",
+        "default": "1"
+      }
+    ]
+  },
+  {
+    "name": "Remove Meet Now Button",
+    "category": "Taskbar",
+    "description": "Hides the Meet Now video call button from the tray. Windows 10.",
+    "default_selected": true,
+    "os": 10,
+    "entries": [
+      {
+        "hive": "HKCU",
+        "key": "Software\\Policies\\Microsoft\\Windows\\Explorer",
+        "value_name": "HideSCAMeetNow",
+        "kind": "dword",
+        "recommended": "1",
+        "default": "0"
+      }
+    ]
+  },
+  {
+    "name": "Hide Search Box",
+    "category": "Taskbar",
+    "description": "Collapses the taskbar search box to nothing. 0 hidden, 1 icon, 2 box.",
+    "default_selected": true,
+    "entries": [
+      {
+        "hive": "HKCU",
+        "key": "Software\\Microsoft\\Windows\\CurrentVersion\\Search",
+        "value_name": "SearchboxTaskbarMode",
+        "kind": "dword",
+        "recommended": "0",
+        "default": "2"
+      }
+    ]
+  },
+  {
+    "name": "Hide Task View Button",
+    "category": "Taskbar",
+    "description": "Removes the Task View button from the taskbar.",
+    "default_selected": true,
+    "entries": [
+      {
+        "hive": "HKCU",
+        "key": "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+        "value_name": "ShowTaskViewButton",
+        "kind": "dword",
+        "recommended": "0",
+        "default": "1"
+      }
+    ]
+  },
+  {
+    "name": "Left-align Taskbar",
+    "category": "Taskbar",
+    "description": "Moves taskbar icons back to the left edge. Windows 11.",
+    "default_selected": true,
+    "os": 11,
+    "entries": [
+      {
+        "hive": "HKCU",
+        "key": "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+        "value_name": "TaskbarAl",
+        "kind": "dword",
+        "recommended": "0",
+        "default": "1"
+      }
+    ]
+  },
+  {
+    "name": "Enable End Task on Taskbar",
+    "category": "Taskbar",
+    "description": "Adds End Task to the taskbar right-click menu. Windows 11.",
+    "default_selected": true,
+    "os": 11,
+    "entries": [
+      {
+        "hive": "HKCU",
+        "key": "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced\\TaskbarDeveloperSettings",
+        "value_name": "TaskbarEndTask",
+        "kind": "dword",
+        "recommended": "1",
+        "default": "0"
+      }
+    ]
+  },
+  {
+    "name": "Use Small Taskbar Icons",
+    "category": "Taskbar",
+    "description": "Shrinks taskbar icons for a tighter bar. Windows 10.",
+    "default_selected": true,
+    "os": 10,
+    "entries": [
+      {
+        "hive": "HKCU",
+        "key": "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+        "value_name": "TaskbarSmallIcons",
+        "kind": "dword",
+        "recommended": "1",
+        "default": "0"
+      }
+    ]
+  },
+
+  {
+    "name": "Disable Bing Search in Start Menu",
+    "category": "Appearance",
+    "description": "Stops the Start menu sending what you type to Bing.",
+    "default_selected": true,
+    "entries": [
+      {
+        "hive": "HKCU",
+        "key": "Software\\Microsoft\\Windows\\CurrentVersion\\Search",
+        "value_name": "BingSearchEnabled",
+        "kind": "dword",
+        "recommended": "0",
+        "default": "1"
+      }
+    ]
+  },
+  {
+    "name": "Enable Dark Theme",
+    "category": "Appearance",
+    "description": "Switches apps and the system UI to the dark theme.",
+    "restart": "explorer",
+    "entries": [
+      {
+        "hive": "HKCU",
+        "key": "Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize",
+        "value_name": "AppsUseLightTheme",
+        "kind": "dword",
+        "recommended": "0",
+        "default": "1"
+      },
+      {
+        "hive": "HKCU",
+        "key": "Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize",
+        "value_name": "SystemUsesLightTheme",
+        "kind": "dword",
+        "recommended": "0",
+        "default": "1"
+      }
+    ]
+  },
+  {
+    "name": "Enable Classic Context Menus",
+    "category": "Appearance",
+    "description": "Brings back the full right-click menu instead of the Windows 11 stub. Windows 11.",
+    "os": 11,
+    "restart": "explorer",
+    "entries": [
+      {
+        "hive": "HKCU",
+        "key": "SOFTWARE\\CLASSES\\CLSID\\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\\InprocServer32",
+        "value_name": "(Default)",
+        "kind": "string",
+        "recommended": "",
+        "default": "<delete>"
+      }
+    ]
+  },
+  {
+    "name": "Disable Lock Screen",
+    "category": "Appearance",
+    "description": "Skips the lock screen and goes straight to sign-in.",
+    "entries": [
+      {
+        "hive": "HKLM",
+        "key": "SOFTWARE\\Policies\\Microsoft\\Windows\\Personalization",
+        "value_name": "NoLockScreen",
+        "kind": "dword",
+        "recommended": "1",
+        "default": "0"
+      }
+    ]
+  },
+  {
+    "name": "Show Most Used Apps in Start Menu",
+    "category": "Appearance",
+    "description": "Controls the most used list. 0 hide, 1 show, 2 always show.",
+    "entries": [
+      {
+        "hive": "HKLM",
+        "key": "SOFTWARE\\Policies\\Microsoft\\Windows\\Explorer",
+        "value_name": "ShowOrHideMostUsedApps",
+        "kind": "dword",
+        "recommended": "2",
+        "default": "0"
+      }
+    ]
+  },
+  {
+    "name": "Disable Snap Assist Flyout",
+    "category": "Appearance",
+    "description": "Stops the snap layout flyout appearing over the maximize button.",
+    "default_selected": true,
+    "entries": [
+      {
+        "hive": "HKCU",
+        "key": "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+        "value_name": "EnableSnapAssistFlyout",
+        "kind": "dword",
+        "recommended": "0",
+        "default": "1"
+      }
+    ]
+  },
+  {
+    "name": "Set Start Menu to More Pins Layout",
+    "category": "Appearance",
+    "description": "Shows more pinned apps and fewer recommendations. Windows 11.",
+    "default_selected": true,
+    "os": 11,
+    "entries": [
+      {
+        "hive": "HKCU",
+        "key": "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+        "value_name": "Start_Layout",
+        "kind": "dword",
+        "recommended": "1",
+        "default": "0"
+      }
+    ]
+  },
+  {
+    "name": "Disable Transparency Effects",
+    "category": "Appearance",
+    "description": "Turns off the blur and transparency on the taskbar and windows.",
+    "entries": [
+      {
+        "hive": "HKCU",
+        "key": "Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize",
+        "value_name": "EnableTransparency",
+        "kind": "dword",
+        "recommended": "0",
+        "default": "1"
+      }
+    ]
+  }
+]
