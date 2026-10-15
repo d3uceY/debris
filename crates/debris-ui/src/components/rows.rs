@@ -25,7 +25,9 @@
 use crate::components::{Tone, chip, chip_with};
 use crate::icons::{Icon, icon};
 use crate::theme::{Theme, metrics, space, text, veil};
-use debris_core::{AppxPackage, Caveat, Preset, Risk, ScriptMeta};
+use debris_core::{
+    AppxPackage, Caveat, Extension, Preset, Risk, ScriptMeta, Tweak, TweakStatus,
+};
 use gpui::{
     AnyElement, App, ClickEvent, FontWeight, IntoElement, Rgba, SharedString, Window, div,
     prelude::*, px, rgba,
@@ -47,6 +49,11 @@ pub mod column {
 
 /// The mark in a row's lead slot, at a size that does not fight the label.
 pub const LEAD_ICON: f32 = 14.0;
+
+/// The fixed column a fixer row gives its current value. Wide enough for a 32-bit
+/// number and a registry value name's worth of headroom, since what lands here is
+/// whatever the machine happens to hold.
+const CURRENT_VALUE: f32 = 96.0;
 
 // ---------------------------------------------------------------------------
 // Chips derived from domain values — the only place colour is allowed to appear
@@ -347,13 +354,27 @@ pub fn package_caveat(package: &AppxPackage, staged: bool) -> Option<Caveat> {
 
 /// A script in the library. Taller than a package row, because it carries prose and
 /// the prose is the point: the user has to read what it does before running it.
-pub fn script_row(theme: &Theme, script: &ScriptMeta, actions: AnyElement) -> AnyElement {
+///
+/// The leading box is the selection, and the row's whole width toggles it. There is
+/// no per-row Run, because the risk decision is made about a *set* of scripts, and a
+/// button repeated down the list reads as "this is safe to press one at a time".
+///
+/// `ticked` and `on_tick` come from the caller so this stays a pure layout: the mark,
+/// the click, and the label are the only things it knows about.
+pub fn script_row(
+    theme: &Theme,
+    script: &ScriptMeta,
+    ticked: bool,
+    on_tick: impl Fn(&ClickEvent, &mut Window, &mut App) + 'static,
+    actions: AnyElement,
+) -> AnyElement {
     let risk = script.risk;
     let font_ui = theme.font_ui.clone();
     let font_mono = theme.font_mono.clone();
     let muted = theme.muted_foreground;
 
     let mut body = div()
+        .id(("script-row", 0usize))
         .flex()
         .flex_col()
         .w_full()
@@ -369,7 +390,12 @@ pub fn script_row(theme: &Theme, script: &ScriptMeta, actions: AnyElement) -> An
             .flex_row()
             .items_center()
             .gap(px(space::SM))
-            .child(icon(Icon::Terminal, LEAD_ICON, muted))
+            .w_full()
+            // The row is the target, so the entire width has to be clickable.
+            .id(format!("script-pick-{}", script.id))
+            .cursor_pointer()
+            .on_click(on_tick)
+            .child(tick_box(theme, ticked))
             .child(
                 div()
                     .flex_1()
@@ -431,6 +457,277 @@ pub fn script_row(theme: &Theme, script: &ScriptMeta, actions: AnyElement) -> An
                 .child(reason.to_string()),
         );
     }
+
+    body.into_any_element()
+}
+
+// ---------------------------------------------------------------------------
+// Fixer rows
+// ---------------------------------------------------------------------------
+
+/// The square a ticked row shows. Not the shared [`checkbox`], because here the row
+/// *is* the target and the box is only the state: a nested click handler inside a
+/// clickable row is two targets for one gesture.
+fn tick_box(theme: &Theme, ticked: bool) -> AnyElement {
+    let (fill, edge, mark) = if ticked {
+        (theme.primary, theme.primary, theme.primary_foreground)
+    } else {
+        (theme.background, theme.input, theme.muted_foreground)
+    };
+    div()
+        .flex()
+        .items_center()
+        .justify_center()
+        .w(px(15.0))
+        .h(px(15.0))
+        .flex_shrink_0()
+        .rounded(px(4.0))
+        .bg(fill)
+        .border_1()
+        .border_color(edge)
+        .child(if ticked {
+            icon(Icon::Check, 11.0, mark).into_any_element()
+        } else {
+            div().into_any_element()
+        })
+        .into_any_element()
+}
+
+/// How a tweak's scan result reads. Colour carries the meaning, and `Unknown` is
+/// deliberately grey rather than red: not having looked is not a problem with the
+/// machine.
+pub fn status_chip(theme: &Theme, status: TweakStatus) -> AnyElement {
+    let tone = match status {
+        TweakStatus::Applied => Tone::Quiet,
+        TweakStatus::NotApplied => Tone::Danger,
+        TweakStatus::Unknown => Tone::Neutral,
+    };
+    let mark = match status {
+        TweakStatus::Applied => Some(Icon::Check),
+        TweakStatus::NotApplied => Some(Icon::Alert),
+        TweakStatus::Unknown => None,
+    };
+    chip_with(theme, mark, status.label(), tone).into_any_element()
+}
+
+/// One registry rule.
+///
+/// Two lines: the name with its state, then what it changes. The current value is
+/// shown next to the state because "not set" is not actionable on its own; what the
+/// machine holds right now is.
+pub fn tweak_row(
+    theme: &Theme,
+    tweak: &Tweak,
+    ticked: bool,
+    status: TweakStatus,
+    current: Option<&str>,
+    on_tick: impl Fn(&ClickEvent, &mut Window, &mut App) + 'static,
+) -> AnyElement {
+    let font_ui = theme.font_ui.clone();
+    let muted = theme.muted_foreground;
+
+    let mut headline = div()
+        .flex()
+        .flex_row()
+        .items_center()
+        .gap(px(space::SM))
+        .w_full()
+        .id(format!("tweak-{}", tweak.name))
+        .cursor_pointer()
+        .on_click(on_tick)
+        .child(tick_box(theme, ticked))
+        .child(
+            div()
+                .flex_1()
+                .min_w_0()
+                .truncate()
+                .font_family(font_ui.clone())
+                .text_size(px(text::SUBTITLE))
+                .font_weight(FontWeight::MEDIUM)
+                .text_color(theme.foreground)
+                .child(tweak.name.clone()),
+        )
+        // The current value, in a column of its own and always present.
+        //
+        // Reserved rather than sized to its content because a state chip that slides
+        // left for a row with a value and right for a row without one is a column the
+        // eye has to re-find on every line. Empty when there is nothing to show, which
+        // is itself information: the value was not there to read.
+        .child(
+            div()
+                .flex()
+                .flex_row()
+                .justify_end()
+                .w(px(CURRENT_VALUE))
+                .flex_shrink_0()
+                .font_family(theme.font_mono.clone())
+                .text_size(px(text::LABEL))
+                .text_color(muted)
+                .child(
+                    current
+                        .filter(|value| !value.is_empty())
+                        .map(|value| format!("= {value}"))
+                        .unwrap_or_default(),
+                ),
+        )
+        .child(status_chip(theme, status));
+
+    if tweak.requires_admin {
+        headline = headline.child(chip_with(theme, Some(Icon::Shield), "admin", Tone::Quiet));
+    }
+    if tweak.restart != debris_core::Restart::None {
+        headline = headline.child(chip_with(
+            theme,
+            Some(Icon::Refresh),
+            tweak.restart.label(),
+            Tone::Warning,
+        ));
+    }
+
+    div()
+        .flex()
+        .flex_col()
+        .w_full()
+        .gap(px(space::XS))
+        .px(px(space::MD))
+        .py(px(space::SM + 2.0))
+        .border_b_1()
+        .border_color(theme.border.opacity(veil::ROW_RULE))
+        .child(headline)
+        .when(!tweak.description.is_empty(), |row| {
+            row.child(
+                div()
+                    .max_w(px(760.0))
+                    .pl(px(15.0 + space::SM))
+                    .font_family(theme.font_ui.clone())
+                    .text_size(px(text::SMALL))
+                    .text_color(muted)
+                    .child(tweak.description.clone()),
+            )
+        })
+        .into_any_element()
+}
+
+// ---------------------------------------------------------------------------
+// Extension rows
+// ---------------------------------------------------------------------------
+
+/// One catalogue source, with the control that forgets it.
+pub fn source_row(theme: &Theme, url: &str, actions: AnyElement) -> AnyElement {
+    div()
+        .flex()
+        .flex_row()
+        .items_center()
+        .w_full()
+        .gap(px(space::SM))
+        .px(px(space::MD))
+        .py(px(space::XS + 2.0))
+        .border_b_1()
+        .border_color(theme.border.opacity(veil::ROW_RULE))
+        .child(icon(Icon::Link, 12.0, theme.muted_foreground))
+        .child(
+            div()
+                .flex_1()
+                .min_w_0()
+                .truncate()
+                .font_family(theme.font_mono.clone())
+                .text_size(px(text::LABEL))
+                .text_color(theme.muted_foreground)
+                .child(url.to_string()),
+        )
+        .child(actions)
+        .into_any_element()
+}
+
+/// One script from a catalogue.
+///
+/// `installed` decides which control the trailing slot holds: download it, or run
+/// what was downloaded. There is never both, because running an older copy of a
+/// script the catalogue has since changed is not a decision anyone wants to make.
+pub fn extension_row(
+    theme: &Theme,
+    extension: &Extension,
+    installed: Option<&str>,
+    action: AnyElement,
+) -> AnyElement {
+    let muted = theme.muted_foreground;
+
+    let mut headline = div()
+        .flex()
+        .flex_row()
+        .items_center()
+        .gap(px(space::SM))
+        .w_full()
+        .child(icon(Icon::Puzzle, LEAD_ICON, muted))
+        .child(
+            div()
+                .flex_1()
+                .min_w_0()
+                .truncate()
+                .font_family(theme.font_ui.clone())
+                .text_size(px(text::SUBTITLE))
+                .font_weight(FontWeight::MEDIUM)
+                .text_color(theme.foreground)
+                .child(extension.name.clone()),
+        );
+
+    if let Some(label) = extension.version_label() {
+        headline = headline.child(chip(theme, label, Tone::Quiet));
+    }
+    if let Some(installed) = installed.filter(|version| !version.is_empty()) {
+        headline = headline.child(chip(
+            theme,
+            format!("installed v{installed}"),
+            Tone::Success,
+        ));
+    }
+    headline = headline.child(action);
+
+    let body = div()
+        .flex()
+        .flex_col()
+        .w_full()
+        .gap(px(space::XS))
+        .px(px(space::MD))
+        .py(px(space::SM + 2.0))
+        .border_b_1()
+        .border_color(theme.border.opacity(veil::ROW_RULE))
+        .child(headline);
+
+    let body = if extension.description.is_empty() {
+        body
+    } else {
+        body.child(
+            div()
+                .max_w(px(760.0))
+                .pl(px(LEAD_ICON + space::SM))
+                .font_family(theme.font_ui.clone())
+                .text_size(px(text::SMALL))
+                .text_color(muted)
+                .child(extension.description.clone()),
+        )
+    };
+
+    let body = body.child(
+        div()
+            .flex()
+            .flex_row()
+            .items_center()
+            .gap(px(space::XS))
+            .pl(px(LEAD_ICON + space::SM))
+            .text_size(px(text::LABEL))
+            .text_color(muted)
+            .child(if extension.requires_admin {
+                "Needs administrator rights"
+            } else {
+                "Runs as you"
+            })
+            .child(if extension.sha256.is_some() {
+                "· checksum published"
+            } else {
+                "· no checksum published"
+            }),
+    );
 
     body.into_any_element()
 }

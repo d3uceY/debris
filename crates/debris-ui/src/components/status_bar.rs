@@ -64,7 +64,6 @@ pub fn status_bar(
 ) -> AnyElement {
     let (dot, message_color) = match status.tone() {
         StatusTone::Neutral => (theme.muted_foreground, theme.foreground),
-        StatusTone::Good => (theme.success, theme.foreground),
         StatusTone::Caution => (theme.warning, theme.foreground),
         StatusTone::Bad => (theme.danger, theme.danger),
     };

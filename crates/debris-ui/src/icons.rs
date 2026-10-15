@@ -30,8 +30,12 @@ pub enum Icon {
     // — Surfaces —
     /// The package inventory.
     Package,
+    /// The registry fixers.
+    Wrench,
     /// The PowerShell library.
     Terminal,
+    /// Third-party scripts from a catalogue.
+    Puzzle,
     /// Saved presets.
     Layers,
 
@@ -50,6 +54,10 @@ pub enum Icon {
     Check,
     ArrowRight,
     ArrowLeft,
+    /// Fetch something from the network.
+    Download,
+    /// A link, as opposed to a path.
+    Link,
 
     // — Meaning —
     Alert,
@@ -63,7 +71,9 @@ impl Icon {
     pub fn path(self) -> &'static str {
         match self {
             Icon::Package => "icons/package.svg",
+            Icon::Wrench => "icons/wrench.svg",
             Icon::Terminal => "icons/terminal.svg",
+            Icon::Puzzle => "icons/puzzle.svg",
             Icon::Layers => "icons/layers.svg",
             Icon::Search => "icons/search.svg",
             Icon::PanelLeft => "icons/panel-left.svg",
@@ -75,6 +85,8 @@ impl Icon {
             Icon::Check => "icons/check.svg",
             Icon::ArrowRight => "icons/arrow-right.svg",
             Icon::ArrowLeft => "icons/arrow-left.svg",
+            Icon::Download => "icons/download.svg",
+            Icon::Link => "icons/link.svg",
             Icon::Alert => "icons/alert.svg",
             Icon::Shield => "icons/shield.svg",
             Icon::Store => "icons/store.svg",

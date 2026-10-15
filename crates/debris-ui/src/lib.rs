@@ -14,7 +14,7 @@
 //!   an SVG.
 //! * [`components`] — the seven shapes the interface is made of, plus the shell's
 //!   chrome pieces.
-//! * [`views`] — the shell itself ([`views::root`]) and the three surfaces.
+//! * [`views`] — the shell itself ([`views::root`]) and the five surfaces.
 //! * [`snapshot`] — the plain data a frame is drawn from.
 //!
 //! Read `DESIGN.md` at the repository root before changing a token. The neutral
@@ -27,17 +27,6 @@ pub mod snapshot;
 pub mod theme;
 pub mod views;
 
-pub use snapshot::{Pending, Screen, Snapshot, Status, StatusTone};
+pub use snapshot::{CatalogEntry, Pending, Screen, Snapshot, Status, StatusTone};
 pub use theme::{Appearance, Theme, ThemeExt};
 pub use views::DebrisApp;
-
-/// Re-exports so the binary does not have to know GPUI's or this crate's module
-/// layout.
-pub mod prelude {
-    pub use crate::components::button::{Button, Variant, button};
-    pub use crate::components::{Tone, chip, eyebrow, kbd};
-    pub use crate::icons::{Icon, icon};
-    pub use crate::snapshot::{Pending, Screen, Snapshot, Status, StatusTone};
-    pub use crate::theme::{Appearance, Theme, ThemeExt, metrics, radius, space, text, veil};
-    pub use crate::views::{DebrisApp, root};
-}

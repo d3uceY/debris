@@ -131,7 +131,6 @@ pub struct Button<'a> {
     id: SharedString,
     label: Option<SharedString>,
     mark: Option<Icon>,
-    keycap: Option<SharedString>,
     variant: Variant,
     size: Size,
     icon_only: bool,
@@ -146,7 +145,6 @@ pub fn button<'a>(theme: &'a Theme, id: impl Into<SharedString>) -> Button<'a> {
         id: id.into(),
         label: None,
         mark: None,
-        keycap: None,
         variant: Variant::Outline,
         size: Size::Md,
         icon_only: false,
@@ -163,11 +161,6 @@ impl<'a> Button<'a> {
 
     pub fn icon(mut self, mark: Icon) -> Self {
         self.mark = Some(mark);
-        self
-    }
-
-    pub fn keycap(mut self, stroke: impl Into<SharedString>) -> Self {
-        self.keycap = Some(stroke.into());
         self
     }
 
@@ -230,7 +223,6 @@ impl<'a> Button<'a> {
             id,
             label,
             mark,
-            keycap,
             variant,
             size,
             icon_only,
@@ -304,9 +296,6 @@ impl<'a> Button<'a> {
                     .whitespace_nowrap()
                     .child(label),
             );
-        }
-        if let Some(stroke) = keycap {
-            element = element.child(crate::components::kbd(theme, stroke));
         }
         if let Some(text) = tooltip {
             element = element.tooltip(crate::components::tooltip::tip(text));

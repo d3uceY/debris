@@ -11,25 +11,37 @@
 //! decided inside the views from the data below.
 
 use crate::icons::Icon;
-use debris_core::{AppxPackage, Counts, Preset, RemovalPlan, ScriptMeta};
-use std::collections::HashSet;
+use debris_core::{
+    AppxPackage, BloatCatalog, Counts, Extension, Preset, RemovalPlan, ScriptMeta, Tweak, TweakScan,
+};
+use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum Screen {
     #[default]
     Packages,
+    Fixers,
     Scripts,
+    Extensions,
     Presets,
 }
 
 impl Screen {
-    pub const ALL: [Screen; 3] = [Screen::Packages, Screen::Scripts, Screen::Presets];
+    pub const ALL: [Screen; 5] = [
+        Screen::Packages,
+        Screen::Fixers,
+        Screen::Scripts,
+        Screen::Extensions,
+        Screen::Presets,
+    ];
 
     pub fn label(self) -> &'static str {
         match self {
             Screen::Packages => "Packages",
+            Screen::Fixers => "Fixers",
             Screen::Scripts => "Scripts",
+            Screen::Extensions => "Extensions",
             Screen::Presets => "Presets",
         }
     }
@@ -37,7 +49,9 @@ impl Screen {
     pub fn icon(self) -> Icon {
         match self {
             Screen::Packages => Icon::Package,
+            Screen::Fixers => Icon::Wrench,
             Screen::Scripts => Icon::Terminal,
+            Screen::Extensions => Icon::Puzzle,
             Screen::Presets => Icon::Layers,
         }
     }
@@ -48,21 +62,10 @@ impl Screen {
     pub fn title(self) -> &'static str {
         match self {
             Screen::Packages => "Installed packages",
+            Screen::Fixers => "Registry fixers",
             Screen::Scripts => "Script library",
+            Screen::Extensions => "Extensions",
             Screen::Presets => "Saved presets",
-        }
-    }
-
-    /// The line under the title, saying what the surface is for.
-    pub fn blurb(self) -> &'static str {
-        match self {
-            Screen::Packages => {
-                "Everything installed for this user. Stage what should go, then review before it runs."
-            }
-            Screen::Scripts => {
-                "Audited PowerShell from the local library. Nothing runs unless you run it."
-            }
-            Screen::Presets => "Named sets of packages, including the Fresh Start list.",
         }
     }
 
@@ -70,16 +73,35 @@ impl Screen {
     pub fn hint(self) -> &'static str {
         match self {
             Screen::Packages => "Filter packages by name or publisher…",
+            Screen::Fixers => "Filter fixers…",
             Screen::Scripts => "Filter the library…",
+            Screen::Extensions => "Filter extensions…",
             Screen::Presets => "Find a preset…",
         }
+    }
+}
+
+/// One extension, and the catalogue it came from.
+///
+/// Two catalogues can legitimately list the same script. Keeping the source attached
+/// means the list can say where an entry came from instead of presenting a merged blob
+/// as if it were one publisher's work.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct CatalogEntry {
+    pub source: String,
+    pub extension: Extension,
+}
+
+impl CatalogEntry {
+    /// The identity used for install state, which is the URL the script comes from.
+    pub fn url(&self) -> &str {
+        &self.extension.url
     }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum StatusTone {
     Neutral,
-    Good,
     Caution,
     Bad,
 }
@@ -94,8 +116,14 @@ pub enum StatusTone {
 pub enum Pending {
     /// Remove the packages currently staged in the queue.
     Removal,
-    /// Run one script, by id.
-    Script(String),
+    /// Run every ticked script.
+    Scripts,
+    /// Write every ticked tweak's recommended value.
+    Fixers,
+    /// Put every ticked tweak back to the value Windows ships with.
+    Restore,
+    /// Run one installed extension, by the URL it was installed from.
+    Extension(String),
 }
 
 /// The bottom edge. One line, always in the same place — never a toast that
@@ -161,7 +189,29 @@ pub struct Snapshot {
     pub plan: RemovalPlan,
 
     pub scripts: Arc<Vec<ScriptMeta>>,
+    /// The ticked scripts. The library runs a marked set, not one row at a time.
+    pub script_selection: Arc<HashSet<String>>,
     pub presets: Arc<Vec<Preset>>,
+
+    /// The fixer catalogue, and the rules ticked in it.
+    pub tweaks: Arc<Vec<Tweak>>,
+    pub tweak_selection: Arc<HashSet<String>>,
+    /// What the last Analyze pass found, keyed by tweak name. A name that is absent
+    /// has not been checked, which is why [`TweakStatus::Unknown`] exists.
+    pub tweak_scans: Arc<HashMap<String, TweakScan>>,
+    /// Whether a batch of fixers writes a `.reg` backup first.
+    pub backup_before_apply: bool,
+
+    /// What the catalogue says each package is. Advisory: it describes, never gates.
+    pub bloat: Arc<BloatCatalog>,
+
+    /// Extensions, gathered from every catalogue the user has added.
+    pub extensions: Arc<Vec<CatalogEntry>>,
+    pub extension_sources: Arc<Vec<String>>,
+    /// Script URLs already downloaded, and the version recorded when they were.
+    pub installed_extensions: Arc<HashMap<String, String>>,
+    /// What the user is typing into the catalogue field, before it is added.
+    pub source_input: String,
 
     /// The keyboard cursor into `inventory`. Operate surfaces are keyboard-first.
     pub cursor: usize,
@@ -228,5 +278,31 @@ impl Snapshot {
 
     pub fn is_busy(&self) -> bool {
         self.loading.is_some()
+    }
+
+    /// The ticked tweaks, in catalogue order so a run reads top to bottom.
+    pub fn selected_tweaks(&self) -> Vec<&Tweak> {
+        self.tweaks
+            .iter()
+            .filter(|tweak| self.tweak_selection.contains(&tweak.name))
+            .collect()
+    }
+
+    /// The scan for one tweak, or "not checked yet".
+    pub fn tweak_scan(&self, name: &str) -> TweakScan {
+        self.tweak_scans.get(name).cloned().unwrap_or_default()
+    }
+
+    /// The ticked scripts, in library order.
+    pub fn selected_scripts(&self) -> Vec<&ScriptMeta> {
+        self.scripts
+            .iter()
+            .filter(|script| self.script_selection.contains(&script.id))
+            .collect()
+    }
+
+    /// Whether a script has been ticked.
+    pub fn script_is_selected(&self, id: &str) -> bool {
+        self.script_selection.contains(id)
     }
 }

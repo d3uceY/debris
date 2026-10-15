@@ -1,4 +1,4 @@
-//! Composition: the shell, and the three surfaces.
+//! Composition: the shell, and the five surfaces.
 //!
 //! # The shell
 //!
@@ -35,6 +35,8 @@
 //! never hold a reference to the app, and the app never knows what a `div` is.
 
 mod confirm;
+mod extensions;
+mod fixers;
 mod inspector;
 mod ledger;
 mod packages;
@@ -79,13 +81,48 @@ pub trait DebrisApp: Sized + 'static {
     fn stage_all(&mut self, cx: &mut Context<Self>);
     fn unstage_all(&mut self, cx: &mut Context<Self>);
     fn scan(&mut self, cx: &mut Context<Self>);
-    /// Run one script, now. Views go through [`DebrisApp::request_script`]; this is the
-    /// executor the confirmation calls, so it is not the event a control binds to.
-    fn run_script(&mut self, id: &str, cx: &mut Context<Self>);
+
+    // — the script library —
+    /// Tick or untick one script.
+    fn toggle_script(&mut self, id: &str, cx: &mut Context<Self>);
+    /// Tick or untick everything.
+    fn tick_all_scripts(&mut self, ticked: bool, cx: &mut Context<Self>);
+    /// Ask to run every ticked script. Opens the confirmation; it runs nothing.
+    fn request_scripts(&mut self, window: &mut Window, cx: &mut Context<Self>);
+
+    // — the fixer catalogue —
+    /// Tick or untick one fixer, by name.
+    fn toggle_fixer(&mut self, name: &str, cx: &mut Context<Self>);
+    fn tick_all_fixers(&mut self, ticked: bool, cx: &mut Context<Self>);
+    /// Read what the registry holds for every fixer.
+    fn analyze_fixers(&mut self, cx: &mut Context<Self>);
+    /// Ask to write every ticked fixer. Opens the confirmation; it writes nothing.
+    fn request_fixers(&mut self, window: &mut Window, cx: &mut Context<Self>);
+    /// Ask to put the ticked fixers back to the Windows default.
+    fn request_restore(&mut self, window: &mut Window, cx: &mut Context<Self>);
+    /// Turn the pre-run `.reg` backup on or off.
+    fn toggle_backup(&mut self, cx: &mut Context<Self>);
+
+    // — the extension catalogues —
+    /// The URL being typed into the catalogue field.
+    fn set_source_input(&mut self, value: String, cx: &mut Context<Self>);
+    /// Add the typed URL as a catalogue and fetch it.
+    fn add_source(&mut self, cx: &mut Context<Self>);
+    /// Forget a catalogue, and everything it listed.
+    fn remove_source(&mut self, url: &str, cx: &mut Context<Self>);
+    /// Fetch every catalogue again.
+    fn refresh_catalogues(&mut self, cx: &mut Context<Self>);
+    /// Download one extension's script.
+    fn install_extension(&mut self, url: &str, cx: &mut Context<Self>);
+    /// Delete an installed extension's script.
+    fn uninstall_extension(&mut self, url: &str, cx: &mut Context<Self>);
+    /// Ask to run one installed extension. Opens the confirmation; it runs nothing.
+    fn request_extension(&mut self, url: &str, window: &mut Window, cx: &mut Context<Self>);
+    /// The catalogue field's focus handle, owned by the app so focus survives a render.
+    fn source_focus(&self) -> &FocusHandle;
+
     /// Ask to remove the staged packages. Opens the confirmation; it removes nothing.
     fn request_removal(&mut self, window: &mut Window, cx: &mut Context<Self>);
-    /// Ask to run one script. Opens the confirmation; it runs nothing.
-    fn request_script(&mut self, id: &str, window: &mut Window, cx: &mut Context<Self>);
     /// Do the thing the confirmation is asking about.
     fn confirm_pending(&mut self, cx: &mut Context<Self>);
     /// Dismiss the confirmation without doing anything.
@@ -114,11 +151,14 @@ pub fn root<T: DebrisApp>(this: &mut T, cx: &mut Context<T>) -> AnyElement {
     let search_focus = this.search_focus().clone();
     let list_focus = this.list_focus().clone();
     let confirm_focus = this.confirm_focus().clone();
+    let source_focus = this.source_focus().clone();
     let entity: WeakEntity<T> = cx.entity().downgrade();
 
     let center: AnyElement = match snapshot.screen {
         Screen::Packages => packages::screen(&theme, &snapshot, &entity, &list_focus, cx),
+        Screen::Fixers => fixers::screen(&theme, &snapshot, cx),
         Screen::Scripts => scripts::screen(&theme, &snapshot, cx),
+        Screen::Extensions => extensions::screen(&theme, &snapshot, &source_focus, cx),
         Screen::Presets => presets::screen(&theme, &snapshot, cx),
     };
 

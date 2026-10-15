@@ -55,6 +55,38 @@ pub fn search_key_handler<T: DebrisApp>(
     })
 }
 
+/// Typing in the catalogue field on the Extensions surface.
+///
+/// A second field, and the only one: the rule that a shell has one search field is
+/// about *filters*, and this is not a filter. It is the value a button acts on, which
+/// is why it sits beside that button instead of in the title bar.
+pub fn source_key_handler<T: DebrisApp>(
+    cx: &mut gpui::Context<T>,
+) -> impl Fn(&KeyDownEvent, &mut Window, &mut App) + 'static {
+    cx.listener(|this: &mut T, event: &KeyDownEvent, _window, cx| {
+        let current = this.snapshot().source_input.clone();
+        match event.keystroke.key.as_str() {
+            "enter" => this.add_source(cx),
+            "backspace" => {
+                let mut next = current;
+                next.pop();
+                this.set_source_input(next, cx);
+            }
+            "escape" | "delete" => this.set_source_input(String::new(), cx),
+            _ => {
+                if let Some(typed) = event.keystroke.key_char.as_deref()
+                    && !typed.is_empty()
+                    && !typed.chars().any(char::is_control)
+                {
+                    let mut next = current;
+                    next.push_str(typed);
+                    this.set_source_input(next, cx);
+                }
+            }
+        }
+    })
+}
+
 /// A scroll region. `overflow_scroll` lives on `StatefulInteractiveElement`, so the
 /// container needs an element id before it can scroll — and taking an id is what
 /// turns a `Div` into a `Stateful<Div>`.

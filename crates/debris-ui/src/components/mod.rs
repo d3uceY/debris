@@ -29,7 +29,7 @@ pub mod text_field;
 pub mod tooltip;
 
 use crate::icons::{Icon, icon};
-use crate::theme::{Theme, ThemeExt, radius, space, text, veil};
+use crate::theme::{Theme, radius, space, text, veil};
 use gpui::{
     Animation, AnimationExt, AnyElement, App, ClickEvent, Div, FontWeight, IntoElement,
     SharedString, Window, div, prelude::*, px,
@@ -55,15 +55,6 @@ pub fn v_flex() -> Div {
 // Structure
 // ---------------------------------------------------------------------------
 
-/// Hairline separation inside a region.
-pub fn rule(theme: &Theme) -> impl IntoElement {
-    div()
-        .w_full()
-        .h(px(1.0))
-        .flex_shrink_0()
-        .bg(theme.border)
-}
-
 /// A vertical hairline, for separating items in a horizontal band.
 pub fn divider(theme: &Theme) -> impl IntoElement {
     div()
@@ -71,13 +62,6 @@ pub fn divider(theme: &Theme) -> impl IntoElement {
         .h(px(14.0))
         .flex_shrink_0()
         .bg(theme.border)
-}
-
-/// A full-width tinted strip. The band is the only "depth" device in the app: there
-/// are no shadows, so a header separates itself by being a fraction of a shade
-/// different from the surface under it.
-pub fn band(cx: &App, veil: f32) -> Div {
-    div().w_full().flex_shrink_0().bg(cx.theme().band(veil))
 }
 
 // ---------------------------------------------------------------------------
@@ -211,67 +195,6 @@ pub fn kbd(theme: &Theme, stroke: impl Into<SharedString>) -> Div {
 // ---------------------------------------------------------------------------
 // Controls
 // ---------------------------------------------------------------------------
-
-/// A checkbox. Square, hairline, a mark when it is on.
-pub fn checkbox<F>(
-    theme: &Theme,
-    id: &str,
-    checked: bool,
-    caption: &str,
-    on_click: F,
-) -> AnyElement
-where
-    F: Fn(&ClickEvent, &mut Window, &mut App) + 'static,
-{
-    let (box_fill, box_border, mark) = if checked {
-        (theme.primary, theme.primary, theme.primary_foreground)
-    } else {
-        (theme.background, theme.input, theme.muted_foreground)
-    };
-    let hover = theme.accent.opacity(0.5);
-    let caption_color = if checked {
-        theme.foreground
-    } else {
-        theme.muted_foreground
-    };
-    let font = theme.font_ui.clone();
-
-    h_flex()
-        .id(id.to_string())
-        .gap(px(space::SM))
-        .py(px(2.0))
-        .cursor_pointer()
-        .rounded(px(radius::CHIP))
-        .hover(move |style| style.bg(hover))
-        .on_click(on_click)
-        .child(
-            div()
-                .flex()
-                .items_center()
-                .justify_center()
-                .w(px(15.0))
-                .h(px(15.0))
-                .flex_shrink_0()
-                .rounded(px(4.0))
-                .bg(box_fill)
-                .border_1()
-                .border_color(box_border)
-                .text_color(mark)
-                .child(if checked {
-                    icon(Icon::Check, 11.0, mark).into_any_element()
-                } else {
-                    div().into_any_element()
-                }),
-        )
-        .child(
-            div()
-                .text_size(px(text::SMALL))
-                .font_family(font)
-                .text_color(caption_color)
-                .child(caption.to_string()),
-        )
-        .into_any_element()
-}
 
 /// A switch. The knob travels by changing the row's justification rather than by
 /// transforming it, because GPUI has no element transforms — so the state change is
