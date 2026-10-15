@@ -187,10 +187,11 @@ change.
 
 ## The confirmation
 
-One shape, used twice. The control that starts a destructive action lives where the
-decision is made — the queue's footer, or a script's own row — and the dialog is the
-step between that click and the change. Nothing is removed and no script that writes is
-run until the dialog is answered.
+One shape, used five times. The control that starts an action lives where the decision
+is made — the queue's footer, the fixers' footer, the scripts' footer, an extension's own
+row — and the dialog is the step between that click and the change. Nothing is removed,
+no ticked script runs, no fixer is written, and no extension is executed until the dialog
+is answered.
 
 - **It floats, once.** A centred panel over a scrim, because its two actions live in two
 different regions of the shell and an inline confirm cannot be in both places without
@@ -203,6 +204,53 @@ not a stray click. Cancel, `Escape`, or the confirm button; nothing else.
 - **Its copy is data.** The title, the count and the caveat are composed from the plan or
 the script the app already holds, so the sentence and the button can never disagree with
 what will actually run.
+
+## The tick set
+
+The selection model for both catalogue surfaces. It exists because a Run button repeated
+down a list is a lie about the task: the user arrives with a job in mind and picks the
+rows that do it, so the decision is about a *set*, and the interface should say the size
+of that set before anything happens.
+
+- **One box per row, and the row is the target.** A nested click handler inside a
+clickable row is two targets for one gesture, so the row draws its own box instead of
+composing a separate control. The box is state; the row is the control.
+- **The trailing slot says why a row cannot be picked**, when it cannot. A script the
+library refused is still readable; it just carries its reason where Run used to be.
+- **The footer is the ask.** A chip naming how many rows are ticked, then one button
+labelled with that number. `Run 4 script(s)`, not `Run`.
+- **Ticking writes nothing.** That separation is the whole safety model, and it is why
+the state is app state rather than view state.
+
+## The fixers surface
+
+A catalogue of registry rules, and the one surface where the app tells you something
+about your machine rather than about a list.
+
+- **Grouped by category in catalogue order**, not by state. A rule's state is a chip on
+its own row; the category is where it came from, and the shelves are how someone
+remembers the catalogue.
+- **Two lines per row.** The name with its state chip and its current value, then the
+sentence saying what it changes. The current value is the only thing that makes "not
+set" actionable.
+- **Three states, and "not checked" is not an accusation.** `already set` is quiet,
+`not set` is the removal colour, and `not checked` is neutral, because not having
+looked is not a fault with the machine.
+- **The backup is a control, not a setting.** It sits in the toolbar, where its effect
+is, and its label says what it does rather than what it is called.
+
+## The extensions surface
+
+Two lists in one region, and the split is the point: the catalogues are the app's
+configuration, and the entries below them are somebody else's content.
+
+- **The catalogue field is the one second text field in the app.** The rule about one
+search field is a rule about *filters*; this is the value a button acts on, so it sits
+beside that button rather than in the title bar.
+- **Install and Run are never both offered.** Running an older copy of a script the
+catalogue has since changed is not a decision anyone should be making.
+- **A row says whether a checksum was published**, because that is the difference
+between a download the app can vouch for and one it cannot.
 
 ## Icons
 

@@ -4,10 +4,15 @@
 
 # debris
 
-A Windows debloat tool in Rust. It inventories the Appx/UWP packages installed for
-the current user, lets you stage a set for removal, and removes them. It also runs
-audited PowerShell maintenance scripts from a local library, confirming each one
-before it runs.
+A Windows debloat tool in Rust. It does three things:
+
+- **Packages** — inventories the Appx/UWP packages installed for the current user, lets
+  you stage a set for removal, and removes them.
+- **Fixers** — a catalogue of registry rules, each naming the value it wants *and* the
+  value Windows ships with. Tick the ones you want, check them against the registry,
+  run them, and restore any of them to the Windows default.
+- **Scripts** — an audited PowerShell library, plus third-party scripts from JSON
+  catalogues you add by URL.
 
 ## Screenshots
 
@@ -16,16 +21,71 @@ and nothing runs until the button at the bottom is pressed.
 
 ![The package inventory, with three packages staged for removal in the left column](docs/packages.png)
 
-The script library. Every script declares its own risk and whether it needs administrator
-rights, and the Run button beside it asks before that one script runs.
+The fixer catalogue. Each rule shows whether the machine already satisfies it and what
+it holds right now. Nothing is written until the ticked set is confirmed.
 
-![The script library, showing each script's risk, admin requirement, and its run button](docs/scripts.png)
+![The registry fixers, grouped by category, with state chips and the run footer](docs/fixers.png)
+
+The script library. Every script declares its own risk and whether it needs
+administrator rights, and the ticked set runs from one footer button.
+
+![The script library, showing each script's risk and admin requirement](docs/scripts.png)
 
 ## Status
 
-Early. The package inventory, staging ledger, script library, presets, and the full
-interface are implemented and tested. Package removal executes the real PowerShell
-command; both it and every script ask for confirmation first.
+Early. Everything described above is implemented and tested. Package removal executes
+the real `Remove-AppxPackage` command, and a run of fixers writes the registry; both ask
+for confirmation first. No test in the suite executes a script or writes the registry.
+
+## Where your data goes
+
+Nothing is sent anywhere unless you add a catalogue URL and ask for it.
+
+| Path | What |
+|---|---|
+| `%APPDATA%\debris\settings.json` | Backup toggle, appearance, catalogue URLs |
+| `%APPDATA%\debris\fixers\*.json` | Fixers you wrote. Same schema as the shipped catalogue |
+| `%APPDATA%\debris\backups\*.reg` | A backup written before each fixer run |
+| `%APPDATA%\debris\extensions\` | Installed extension scripts, and the record of them |
+| `%LOCALAPPDATA%\debris\scripts\` | The unpacked script library. Regenerable, so it does not roam |
+
+Every file the app reads is JSON. The shipped catalogues are `assets/data/fixers.json`
+and `assets/data/bloatware.json`, embedded in the binary at build time.
+
+## Publishing an extension catalogue
+
+An extension is a script this app does not ship. You publish it, list it in a JSON file,
+and anyone who adds that file's URL on the **Extensions** surface can see the list,
+install a script, and run it after confirming. Nothing is audited on the way in: the
+catalogue's own text is what the user reads before deciding, so publish it honestly.
+
+A catalogue is an array, and there are six fields:
+
+```json
+[
+  {
+    "name": "Export network configuration",
+    "description": "Writes your addresses, gateways, DNS servers and proxy settings to a text report.",
+    "url": "https://raw.githubusercontent.com/d3uceY/debris/main/examples/extensions/export-network-config.ps1",
+    "version": "1.0",
+    "requiresAdmin": false
+  }
+]
+```
+
+`name` and `url` are required — the URL has to end in `.ps1`, and its last path segment
+becomes the installed file's name. An entry that fails either test is dropped on its own,
+so one typo in a shared catalogue does not hide everybody else's scripts.
+
+`description` and `version` are shown. `requiresAdmin` (or `requires_admin`) makes the
+warnings appear before a run. `sha256` is optional and worth publishing: when an entry
+carries one, a download that does not match is deleted rather than installed.
+
+`examples/extensions/` is a working copy of the above: a two-entry catalogue and the two
+read-only scripts it points at.
+[Its README](examples/extensions/README.md) is the full guide — what an installed script
+gets and does not get, why standard output is not shown, how to publish a checksum, and
+how to serve a catalogue from your own machine to try it before publishing.
 
 ## Architecture
 
@@ -35,7 +95,7 @@ without running a single destructive thing.
 
 ```
 crates/
-├── debris-core/      domain model + all pure logic         (zero dependencies)
+├── debris-core/      domain model + all pure logic         (serde only, no IO)
 ├── debris-backend/   PowerShell discovery, execution, and the script library
 ├── debris-ui/        GPUI: theme, icons, components, views (depends on core only)
 └── debris-app/       the binary; wires backend and ui together
@@ -47,14 +107,17 @@ debris-app ──► debris-backend ──► debris-core
 ```
 
 - **`debris-core`** — `model`, `catalog` (what counts as system-critical), `staging`
-  (the two-partition staging model the removal queue is a view of), `preset`, `script`
-  (the `###` header contract), `plan` (turning a staging set into executable steps),
-  `error`. No IO, no `std::process`,
-  no GPUI. Everything here is unit-testable in microseconds.
+  (the two-partition staging model the removal queue is a view of), `tweak` (a registry
+  rule and whether the machine satisfies it), `bloat` (what a package *is*), `extension`
+  (a catalogue entry), `settings`, `preset`, `script` (the `###` header contract),
+  `plan` (turning a staging set into executable steps), `error`. No IO, no
+  `std::process`, no GPUI. Everything here is unit-testable in microseconds.
 - **`debris-backend`** — the PowerShell boundary, behind one trait. `CommandRunner`
   has a real implementation (spawns `powershell.exe`) plus two test doubles that
   record instead of spawning. Discovery asks PowerShell for **CSV** rather than
-  marshalling objects, so parsing is plain, verifiable text handling.
+  marshalling objects, so parsing is plain, verifiable text handling. A batch of fixers
+  is read or written in **one** process, and the decision — applied or not — is made in
+  Rust from the values that came back.
 - **`debris-ui`** — theme tokens, the SVG icon set, components, and views. Reads
   state through a small `Snapshot` type, so it can render any state without knowing
   where it came from.
@@ -64,21 +127,25 @@ debris-app ──► debris-backend ──► debris-core
 
 ### The safety model
 
-Three rules, enforced by code and by tests rather than by convention:
+Four rules, enforced by code and by tests rather than by convention:
 
-1. **Nothing runs implicitly.** Removal and scripts are only ever triggered from the
-   staging ledger or the script list, on an explicit action.
+1. **Nothing runs implicitly.** Removal, fixers and scripts are only ever triggered by
+   an explicit action, and the ticked sets are proposals until then.
 2. **Scripts declare themselves.** Every `.ps1` carries a `###` header naming its
    category, risk, whether it needs admin, and whether it supports `-DryRun`. The
    library refuses to mark a script runnable if it declares `risk=destructive`
    without `dry-run=yes`.
-3. **Every action is confirmed.** A removal and a script both open the same dialog,
-   which names what will happen and holds the only control that commits. Nothing runs
-   until it is answered.
+3. **Every action is confirmed.** Removal, a ticked set of scripts, a ticked set of
+   fixers, a restore, and an extension all open the same dialog, which names what will
+   happen and holds the only control that commits.
+4. **A fixer names its way back.** Every rule carries the value Windows ships with, so
+   "restore" is a fact about the catalogue rather than a promise. A rule whose default
+   is the *absence* of a value says so, and restoring deletes it.
 
-`crates/debris-backend/tests/policy.rs` asserts all three against the real
-`scripts/` directory, including that every script parses under PowerShell's own
-parser — parse-only, so validation never executes anything.
+`crates/debris-backend/tests/policy.rs` asserts all of this against the real
+`scripts/` directory and the real `assets/data/` catalogues, including that every
+script parses under PowerShell's own parser. Parse-only, so validation never executes
+anything.
 
 ## Layout
 
@@ -87,21 +154,25 @@ crates/          the four Rust crates
 scripts/         the PowerShell library, segmented by intent
   lib/           shared module (logging, elevation checks, dry-run plumbing)
   apps/          remove or restore preinstalled apps
-  privacy/       telemetry, services
   shell/         Explorer and Start menu
   maintenance/   system housekeeping: cleanup, caches, and resets
 assets/
   icons/         the SVG icon set
-  data/          system-app list, shipped presets
+  data/          fixer catalogue, bloatware catalogue, system-app list, presets
 docs/            the screenshots above
+examples/        a catalogue template, with two working extension scripts
 ```
 
-Both directories are the source of truth, and both are **embedded into the binary at
-build time** — a released exe needs nothing beside it. Only the files the app actually
-reads go in, so `assets/debris.ico` (a link-time resource) and `scripts/README.md` (this
-repository's own documentation) stay out. The script library is unpacked to
-`%LOCALAPPDATA%\debris\scripts\<hash>` on launch: PowerShell runs a script from a real
-path, and the shared module is imported through `$PSScriptRoot`.
+There is no `privacy/` shelf. Everything that used to live there is a registry rule,
+so it is a fixer: the catalogue can describe it, check it, apply it and undo it, which
+a script could not.
+
+Both `assets/` and `scripts/` are the source of truth, and both are **embedded into the
+binary at build time** — a released exe needs nothing beside it. Only the files the app
+actually reads go in, so `assets/debris.ico` (a link-time resource) and
+`scripts/README.md` (this repository's own documentation) stay out. The script library is
+unpacked to `%LOCALAPPDATA%\debris\scripts\<hash>` on launch: PowerShell runs a script
+from a real path, and the shared module is imported through `$PSScriptRoot`.
 
 ## Build
 
