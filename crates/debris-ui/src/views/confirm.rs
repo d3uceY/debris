@@ -17,6 +17,7 @@ use crate::icons::{Icon, icon};
 use crate::snapshot::{Pending, Snapshot};
 use crate::theme::{Theme, space, text};
 use crate::views::DebrisApp;
+use debris_core::{ScriptMeta, Tweak};
 use gpui::{
     AnyElement, ClickEvent, Context, FocusHandle, IntoElement, KeyDownEvent, div, prelude::*, px,
 };
@@ -117,8 +118,9 @@ struct Confirm {
     body: Vec<AnyElement>,
 }
 
-/// The copy is composed from what the app already holds — the plan and the script —
-/// so the sentence and the button can never disagree with what will actually run.
+/// The copy is composed from what the app already holds — the plan, the ticked
+/// scripts, the ticked fixers — so the sentence and the button can never disagree
+/// with what will actually run.
 fn copy(theme: &Theme, snapshot: &Snapshot, pending: &Pending) -> Confirm {
     match pending {
         Pending::Removal => {
@@ -138,36 +140,251 @@ fn copy(theme: &Theme, snapshot: &Snapshot, pending: &Pending) -> Confirm {
                 body,
             }
         }
-        Pending::Script(id) => {
-            let script = snapshot.scripts.iter().find(|script| &script.id == id);
+        Pending::Scripts => {
+            let selected = snapshot.selected_scripts();
+            let count = selected.len();
+            let destructive = selected.iter().filter(|s| s.risk.is_destructive()).count();
+            let needs_admin = selected.iter().filter(|s| s.requires_admin).count();
+
             let mut body = Vec::new();
-            if let Some(script) = script {
-                body.push(paragraph(theme, script.risk.detail()));
-                body.push(code_line(theme, script.id.clone()));
-                if script.requires_admin {
-                    body.push(caveat_row(
-                        theme,
-                        "This script needs administrator rights. Windows will ask before it runs.",
-                    ));
-                }
-            } else {
-                body.push(paragraph(theme, "This script is no longer in the library."));
+            for script in selected.iter().take(8) {
+                body.push(script_line(theme, script));
             }
+            if count > 8 {
+                body.push(paragraph(theme, &format!("and {} more.", count - 8)));
+            }
+            if destructive > 0 {
+                body.push(caveat_row(
+                    theme,
+                    &format!(
+                        "{destructive} of these declare destructive risk. Anything they remove may not come back."
+                    ),
+                ));
+            }
+            if needs_admin > 0 && snapshot.elevated == Some(false) {
+                body.push(caveat_row(
+                    theme,
+                    "Some need administrator rights, and debris is not elevated. Those will fail.",
+                ));
+            }
+
             Confirm {
-                title: match script {
-                    Some(script) => format!("Run {}?", script.title),
-                    None => "Run this script?".to_string(),
+                title: match count {
+                    0 => "Nothing ticked?".to_string(),
+                    1 => format!("Run {}?", selected[0].title),
+                    _ => format!("Run {count} scripts?"),
                 },
                 subtitle: "Nothing has run yet.".to_string(),
-                variant: match script {
-                    Some(script) if script.risk.is_destructive() => Variant::Danger,
-                    _ => Variant::Primary,
+                variant: if destructive > 0 {
+                    Variant::Danger
+                } else {
+                    Variant::Primary
                 },
-                confirm_label: "Run script".to_string(),
+                confirm_label: match count {
+                    0 => "Run".to_string(),
+                    1 => "Run script".to_string(),
+                    _ => format!("Run {count}"),
+                },
+                body,
+            }
+        }
+        Pending::Fixers => {
+            let selected = snapshot.selected_tweaks();
+            let count = selected.len();
+            let needs_admin = selected.iter().filter(|t| t.requires_admin).count();
+            let restart: Vec<&str> = selected
+                .iter()
+                .map(|tweak| tweak.restart.label())
+                .filter(|label| *label != "no restart")
+                .collect();
+
+            let mut body = vec![paragraph(
+                theme,
+                "Each rule is written to the registry value it names. Nothing else is touched.",
+            )];
+            for tweak in selected.iter().take(6) {
+                body.push(tweak_line(theme, tweak));
+            }
+            if count > 6 {
+                body.push(paragraph(theme, &format!("and {} more.", count - 6)));
+            }
+            if snapshot.backup_before_apply {
+                body.push(paragraph(
+                    theme,
+                    "A .reg backup of the current values is written first.",
+                ));
+            } else {
+                body.push(caveat_row(theme, "No backup will be written. Restoring uses the Windows default instead."));
+            }
+            if needs_admin > 0 && snapshot.elevated == Some(false) {
+                body.push(caveat_row(
+                    theme,
+                    &format!(
+                        "{needs_admin} of these write outside your user account, and debris is not elevated. Those will fail."
+                    ),
+                ));
+            }
+            if !restart.is_empty() {
+                body.push(paragraph(
+                    theme,
+                    "Some of these need a restart before they take effect.",
+                ));
+            }
+
+            Confirm {
+                title: match count {
+                    1 => format!("Apply {}?", selected[0].name),
+                    _ => format!("Apply {count} fixers?"),
+                },
+                subtitle: "Nothing has been written yet.".to_string(),
+                variant: Variant::Primary,
+                confirm_label: match count {
+                    1 => "Apply fixer".to_string(),
+                    _ => format!("Apply {count}"),
+                },
+                body,
+            }
+        }
+        Pending::Restore => {
+            let selected: Vec<_> = snapshot
+                .selected_tweaks()
+                .into_iter()
+                .filter(|tweak| tweak.is_restorable())
+                .collect();
+            let count = selected.len();
+            let mut body = vec![paragraph(
+                theme,
+                "Each ticked fixer goes back to the value Windows ships with, or is removed where Windows ships nothing.",
+            )];
+            for tweak in selected.iter().take(6) {
+                body.push(tweak_line(theme, tweak));
+            }
+            if count > 6 {
+                body.push(paragraph(theme, &format!("and {} more.", count - 6)));
+            }
+
+            Confirm {
+                title: format!("Restore {count} fixers?"),
+                subtitle: "Nothing has been written yet.".to_string(),
+                variant: Variant::Outline,
+                confirm_label: "Restore".to_string(),
+                body,
+            }
+        }
+        Pending::Extension(url) => {
+            let entry = snapshot.extensions.iter().find(|entry| entry.url() == url);
+            let mut body = vec![paragraph(
+                theme,
+                "This script was written by whoever published the catalogue. It has not been reviewed here.",
+            )];
+
+            // One pass over the Option: absent means the catalogue has changed under
+            // the dialog, and there is nothing else to say about it.
+            let (title, needs_admin) = match entry {
+                Some(entry) => {
+                    body.push(code_line(theme, entry.extension.name.clone()));
+                    if !entry.source.is_empty() {
+                        body.push(code_line(theme, entry.source.clone()));
+                    }
+                    if !entry.extension.description.is_empty() {
+                        body.push(paragraph(theme, &entry.extension.description));
+                    }
+                    if entry.extension.sha256.is_none() {
+                        body.push(caveat_row(
+                            theme,
+                            "The catalogue publishes no checksum, so this copy cannot be verified.",
+                        ));
+                    }
+                    (
+                        format!("Run {}?", entry.extension.name),
+                        entry.extension.requires_admin,
+                    )
+                }
+                None => {
+                    body.push(paragraph(theme, "This entry is no longer in any catalogue."));
+                    ("Run this extension?".to_string(), false)
+                }
+            };
+
+            if needs_admin && snapshot.elevated == Some(false) {
+                body.push(caveat_row(
+                    theme,
+                    "It needs administrator rights, and debris is not elevated. It may fail.",
+                ));
+            }
+
+            Confirm {
+                title,
+                subtitle: "Nothing has run yet.".to_string(),
+                variant: Variant::Danger,
+                confirm_label: "Run extension".to_string(),
                 body,
             }
         }
     }
+}
+
+/// One script, as a dialog line: the title, then the risk it declares.
+fn script_line(theme: &Theme, script: &ScriptMeta) -> AnyElement {
+    div()
+        .flex()
+        .flex_row()
+        .items_center()
+        .gap(px(space::SM))
+        .child(crate::icons::icon(
+            Icon::Terminal,
+            crate::icons::INLINE,
+            theme.muted_foreground,
+        ))
+        .child(
+            div()
+                .flex_1()
+                .min_w_0()
+                .truncate()
+                .font_family(theme.font_ui.clone())
+                .text_size(px(text::SMALL))
+                .text_color(theme.foreground)
+                .child(script.title.clone()),
+        )
+        .child(crate::components::rows::risk_chip(theme, script.risk))
+        .into_any_element()
+}
+
+/// One fixer, as a dialog line: the name and the value it will take.
+fn tweak_line(theme: &Theme, tweak: &Tweak) -> AnyElement {
+    let target = tweak
+        .primary()
+        .map(|entry| format!("{} = {}", entry.display_name(), entry.recommended))
+        .unwrap_or_default();
+    div()
+        .flex()
+        .flex_row()
+        .items_center()
+        .gap(px(space::SM))
+        .child(crate::icons::icon(
+            Icon::Wrench,
+            crate::icons::INLINE,
+            theme.muted_foreground,
+        ))
+        .child(
+            div()
+                .flex_1()
+                .min_w_0()
+                .truncate()
+                .font_family(theme.font_ui.clone())
+                .text_size(px(text::SMALL))
+                .text_color(theme.foreground)
+                .child(tweak.name.clone()),
+        )
+        .child(
+            div()
+                .flex_shrink_0()
+                .font_family(theme.font_mono.clone())
+                .text_size(px(text::LABEL))
+                .text_color(theme.muted_foreground)
+                .child(target),
+        )
+        .into_any_element()
 }
 
 fn paragraph(theme: &Theme, content: &str) -> AnyElement {

@@ -7,14 +7,21 @@
 //! Grouping is by category rather than by risk: risk is a property *of* a row and
 //! shows as a chip, while the category is where the file lives, and the shelves are
 //! how someone remembers their own library.
+//!
+//! # Why a tick set rather than a button per row
+//!
+//! A run button repeated down a list makes each script look like a small, separate
+//! act. It is not: the user arrives with a job in mind and picks the scripts that do
+//! it. Ticking is that decision, and the footer states the size of it before anything
+//! runs.
 
 use crate::components::button::{Variant, button};
-use crate::components::panel::{panel_body, panel_header};
+use crate::components::panel::{panel_body, panel_footer, panel_header};
 use crate::components::rows;
 use crate::components::{Tone, chip, empty_state, section_eyebrow};
 use crate::icons::Icon;
 use crate::snapshot::{Screen, Snapshot};
-use crate::theme::{Theme, metrics, space, veil};
+use crate::theme::{Theme, metrics, space, text, veil};
 use crate::views::{DebrisApp, shared};
 use debris_core::{Category, ScriptMeta};
 use gpui::{AnyElement, ClickEvent, Context, IntoElement, div, prelude::*, px};
@@ -39,8 +46,9 @@ pub fn screen<T: DebrisApp>(theme: &Theme, snapshot: &Snapshot, cx: &mut Context
             subtitle(snapshot, visible.len()),
             None,
         ))
-        .child(toolbar(theme, visible.len()))
+        .child(toolbar::<T>(theme, snapshot, cx))
         .child(body::<T>(theme, snapshot, &visible, cx))
+        .child(footer::<T>(theme, snapshot, cx))
         .into_any_element()
 }
 
@@ -57,16 +65,21 @@ fn matches(script: &ScriptMeta, query: &str) -> bool {
 
 fn subtitle(snapshot: &Snapshot, shown: usize) -> String {
     let total = snapshot.scripts.len();
+    let selected = snapshot.script_selection.len();
+    let mut parts = vec![shared::count(total, "script", "scripts")];
+    if selected > 0 {
+        parts.push(format!("{selected} ticked"));
+    }
     // Say "of" only when the search field is actually narrowing something; otherwise
     // the two numbers are the same number said twice.
-    if shown == total {
-        shared::count(total, "script", "scripts")
-    } else {
-        format!("{shown} of {total} shown")
+    if shown != total {
+        parts.push(format!("{shown} shown"));
     }
+    parts.join(" · ")
 }
 
-fn toolbar(theme: &Theme, shown: usize) -> AnyElement {
+fn toolbar<T: DebrisApp>(theme: &Theme, snapshot: &Snapshot, cx: &mut Context<T>) -> AnyElement {
+    let busy = snapshot.is_busy();
     div()
         .flex()
         .flex_row()
@@ -79,8 +92,32 @@ fn toolbar(theme: &Theme, shown: usize) -> AnyElement {
         .bg(theme.band(veil::BAND_QUIET))
         .border_b_1()
         .border_color(theme.border)
+        .child(
+            button(theme, "scripts-tick-all")
+                .label("Tick all")
+                .ghost()
+                .small()
+                .disabled(busy || snapshot.scripts.is_empty())
+                .build(cx.listener(|this: &mut T, _event: &ClickEvent, _window, cx| {
+                    this.tick_all_scripts(true, cx)
+                })),
+        )
+        .child(
+            button(theme, "scripts-tick-none")
+                .label("Tick none")
+                .ghost()
+                .small()
+                .disabled(busy || snapshot.script_selection.is_empty())
+                .build(cx.listener(|this: &mut T, _event: &ClickEvent, _window, cx| {
+                    this.tick_all_scripts(false, cx)
+                })),
+        )
         .child(div().flex_1())
-        .child(chip(theme, format!("{shown} shown"), Tone::Quiet))
+        .child(chip(
+            theme,
+            format!("{} ticked", snapshot.script_selection.len()),
+            Tone::Quiet,
+        ))
         .into_any_element()
 }
 
@@ -118,54 +155,83 @@ fn body<T: DebrisApp>(
         if group.is_empty() {
             continue;
         }
-        list = list.child(section_eyebrow(
-            theme,
-            category.label(),
-            Some(group.len()),
-        ));
+        list = list.child(section_eyebrow(theme, category.label(), Some(group.len())));
         for script in group {
-            let actions = row_actions::<T>(theme, script, snapshot, cx);
-            list = list.child(rows::script_row(theme, script, actions));
+            let ticked = snapshot.script_is_selected(&script.id);
+            let id = script.id.clone();
+            list = list.child(rows::script_row(
+                theme,
+                script,
+                ticked,
+                cx.listener(move |this: &mut T, _event: &ClickEvent, _window, cx| {
+                    this.toggle_script(&id, cx)
+                }),
+                trailing(theme, script),
+            ));
         }
     }
 
     panel_body().child(list).into_any_element()
 }
 
-fn row_actions<T: DebrisApp>(
-    theme: &Theme,
-    script: &ScriptMeta,
-    snapshot: &Snapshot,
-    cx: &mut Context<T>,
-) -> AnyElement {
-    let id = script.id.clone();
-    // Running a script changes the machine, so the action is coloured by the risk the
-    // script declares rather than dressed up as something softer.
-    let destructive = script.risk.is_destructive();
-    // A script the library refused is not offered, and says why in its own row.
-    let enabled = script.is_runnable() && !snapshot.is_busy();
+/// The trailing slot says why a script is not selectable, when it is not. A script
+/// the library refused is still readable, just not runnable.
+fn trailing(theme: &Theme, script: &ScriptMeta) -> AnyElement {
+    if let Some(reason) = script.blocked_reason() {
+        return chip(theme, reason, Tone::Danger).into_any_element();
+    }
+    div().into_any_element()
+}
 
-    div()
-        .flex()
-        .flex_row()
-        .items_center()
-        .gap(px(space::SM))
+/// The ask: one line naming the size of the run, one button.
+fn footer<T: DebrisApp>(theme: &Theme, snapshot: &Snapshot, cx: &mut Context<T>) -> AnyElement {
+    let selected = snapshot.selected_scripts();
+    let ticked = selected.len();
+    let busy = snapshot.is_busy();
+    let destructive = selected.iter().any(|script| script.risk.is_destructive());
+
+    panel_footer(theme)
         .child(
-            button(theme, format!("run-script-{}", script.id))
-                .label("Run")
-                .icon(if destructive {
-                    Icon::Alert
+            div()
+                .flex()
+                .flex_row()
+                .items_center()
+                .gap(px(space::SM))
+                .flex_1()
+                .min_w_0()
+                .child(if ticked == 0 {
+                    chip(theme, "nothing ticked", Tone::Quiet)
                 } else {
-                    Icon::ArrowRight
+                    chip(theme, format!("{ticked} ticked"), Tone::Neutral)
+                })
+                .when(destructive, |row| {
+                    row.child(
+                        div()
+                            .flex_1()
+                            .min_w_0()
+                            .truncate()
+                            .text_size(px(text::LABEL))
+                            .font_family(theme.font_ui.clone())
+                            .text_color(theme.danger)
+                            .child("One of these declares destructive risk. Read it before running."),
+                    )
+                }),
+        )
+        .child(
+            button(theme, "scripts-run")
+                .label(if ticked == 0 {
+                    "Run scripts".to_string()
+                } else {
+                    format!("Run {ticked} script(s)")
                 })
                 .variant(if destructive {
                     Variant::Danger
                 } else {
-                    Variant::Outline
+                    Variant::Primary
                 })
-                .disabled(!enabled)
-                .build(cx.listener(move |this: &mut T, _event: &ClickEvent, window, cx| {
-                    this.request_script(&id, window, cx)
+                .disabled(busy || ticked == 0)
+                .build(cx.listener(|this: &mut T, _event: &ClickEvent, window, cx| {
+                    this.request_scripts(window, cx)
                 })),
         )
         .into_any_element()
