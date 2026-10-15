@@ -126,13 +126,72 @@ jobs:
           path: dist
           merge-multiple: true
 
+      # The body is the commit list since the last release, and each commit is credited
+      # with a *handle*, not the name git recorded. Only the API knows which account an
+      # email belongs to, so the handle comes from `author.login`; `@d3uceY` notifies an
+      # account and `d3uceY` typed from `.gitconfig` notifies nobody. A commit whose email
+      # GitHub cannot link has no handle, and is listed without one rather than with a
+      # name dressed up as one.
+      - name: Build the changelog
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          TAG: ${{ needs.prepare.outputs.version }}
+          SHA: ${{ github.sha }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          # A native command that fails is data here, not an exception: the 404 below is
+          # the expected answer to "what was the last release?" on a first release.
+          $PSNativeCommandUseErrorActionPreference = $false
+
+          $previous = gh api "repos/$env:REPO/releases/latest" --jq .tag_name 2>$null
+          if ($LASTEXITCODE -ne 0 -or $previous -eq $env:TAG) { $previous = '' }
+
+          # One call for the whole range. `github.sha` is the head, not the tag: a manual
+          # run creates the tag after this step, so the tag may not exist yet.
+          if ($previous) {
+            $json = gh api "repos/$env:REPO/compare/$previous...$env:SHA"
+          } else {
+            $json = gh api "repos/$env:REPO/commits?sha=$env:SHA&per_page=100"
+          }
+          if ($LASTEXITCODE -ne 0) { throw "could not read the commit list" }
+
+          $commits = @($json | ConvertFrom-Json)
+          if ($previous) { $commits = @($commits[0].commits) }
+          if ($commits.Count -eq 0) { throw "no commits found for $env:SHA" }
+
+          $lines = @('## Commits', '')
+          foreach ($commit in $commits) {
+            # Subject only: the body of a commit is not release-notes material.
+            $subject = ($commit.commit.message -split "`n")[0].Trim()
+            $short = $commit.sha.Substring(0, 7)
+            $handle = $commit.author.login
+            if ($handle) {
+              $lines += "- $subject (@$handle, $short)"
+            } else {
+              $lines += "- $subject ($short)"
+            }
+          }
+          if ($previous) {
+            $lines += ''
+            $lines += "**Full changelog**: https://github.com/$env:REPO/compare/$previous...$env:TAG"
+          }
+
+          $path = Join-Path $env:GITHUB_WORKSPACE 'changelog.md'
+          [IO.Directory]::CreateDirectory($env:GITHUB_WORKSPACE) | Out-Null
+          # No BOM and no `-Encoding` guess: the body is sent as UTF-8 text, and a BOM
+          # renders as a stray character at the top of the release.
+          [IO.File]::WriteAllText($path, ($lines -join "`n"), [Text.UTF8Encoding]::new($false))
+          Get-Content -LiteralPath $path | Select-Object -First 6
+
       - name: Publish
         uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ needs.prepare.outputs.version }}
           name: debris ${{ needs.prepare.outputs.version }}
           target_commitish: ${{ github.sha }}
-          generate_release_notes: true
+          body_path: ${{ github.workspace }}/changelog.md
           make_latest: "true"
           draft: false
           files: dist/debris.exe
