@@ -6,9 +6,9 @@
 //! the machine it runs on.
 
 use debris_backend::runner::{CommandRunner, Invocation, ProcessRunner, RunOutput};
-use debris_backend::{is_elevated, script_invocation};
+use debris_backend::{environment, script_invocation};
 use debris_core::script::library;
-use debris_core::{Risk, ScriptMeta};
+use debris_core::{BloatCatalog, Extension, Risk, ScriptMeta, SystemCatalog, Tweak};
 use std::path::{Path, PathBuf};
 
 fn scripts_root() -> PathBuf {
@@ -215,7 +215,23 @@ fn parse_errors(path: &Path) -> Option<Vec<String>> {
          [System.Management.Automation.Language.Parser]::ParseFile('{quoted}', [ref]$null, [ref]$errors) | Out-Null; \
          if ($errors) {{ $errors | ForEach-Object {{ $_.Message }} }} else {{ 'DEBRIS-PARSE-OK' }}"
     );
-    let output: RunOutput = ProcessRunner.run(&Invocation::powershell(&probe)).ok()?;
+    run_parse_probe(&probe)
+}
+
+/// The same, for a script that exists only as a string.
+fn parse_text_errors(text: &str) -> Option<Vec<String>> {
+    let quoted = text.replace('\'', "''");
+    let probe = format!(
+        "$errors = $null; \
+         [System.Management.Automation.Language.Parser]::ParseInput('{quoted}', [ref]$null, [ref]$errors) | Out-Null; \
+         if ($errors) {{ $errors | ForEach-Object {{ $_.Message }} }} else {{ 'DEBRIS-PARSE-OK' }}"
+    );
+    run_parse_probe(&probe)
+}
+
+/// Runs a probe that reports syntax errors one per line, or `DEBRIS-PARSE-OK`.
+fn run_parse_probe(probe: &str) -> Option<Vec<String>> {
+    let output: RunOutput = ProcessRunner.run(&Invocation::powershell(probe)).ok()?;
     let text = output.combined();
     if text.contains("DEBRIS-PARSE-OK") {
         return Some(Vec::new());
@@ -257,6 +273,27 @@ fn the_shared_module_parses() {
     assert!(errors.is_empty(), "{} does not parse: {errors:#?}", module.display());
 }
 
+/// The registry scripts are *generated*, so no file on disk can vouch for them. This
+/// is the only thing that reads them the way PowerShell will.
+#[test]
+fn the_generated_registry_scripts_parse() {
+    use debris_backend::registry::{apply_script, reset_script, scan_script};
+
+    let tweaks = Tweak::parse_library(&asset("fixers.json")).expect("fixers.json should parse");
+    let scripts = [
+        ("scan", scan_script(&tweaks)),
+        ("apply", apply_script(&tweaks)),
+        ("reset", reset_script(&tweaks)),
+    ];
+    for (name, script) in scripts {
+        let Some(errors) = parse_text_errors(&script) else {
+            eprintln!("skipping: PowerShell is not available on this machine");
+            return;
+        };
+        assert!(errors.is_empty(), "the {name} script does not parse: {errors:#?}");
+    }
+}
+
 // ---------------------------------------------------------------------------
 // 5. The runner contract holds.
 // ---------------------------------------------------------------------------
@@ -279,9 +316,9 @@ fn powershell_is_always_launched_non_interactively() {
 fn the_elevation_probe_asks_rather_than_tries() {
     // A probe that attempted to elevate would open a UAC prompt as soon as the app
     // started. Assert it only ever reads a role membership.
-    assert!(debris_backend::scripts::IS_ELEVATED.contains("IsInRole"));
-    assert!(!debris_backend::scripts::IS_ELEVATED.contains("RunAs"));
-    assert!(!debris_backend::scripts::IS_ELEVATED.contains("Start-Process"));
+    assert!(debris_backend::scripts::ENVIRONMENT.contains("IsInRole"));
+    assert!(!debris_backend::scripts::ENVIRONMENT.contains("RunAs"));
+    assert!(!debris_backend::scripts::ENVIRONMENT.contains("Start-Process"));
 }
 
 #[test]
@@ -292,7 +329,7 @@ fn elevation_is_reported_as_false_when_the_probe_fails() {
         stdout: String::new(),
         stderr: "denied".into(),
     }]);
-    assert!(!is_elevated(&runner));
+    assert!(!environment(&runner).elevated);
 }
 
 #[test]
@@ -304,4 +341,206 @@ fn the_dry_run_runner_never_spawns_a_process() {
     let log = runner.log();
     assert_eq!(log.len(), 1);
     assert_eq!(log[0], invocation);
+}
+
+// ---------------------------------------------------------------------------
+// 6. The shipped catalogues.
+//
+// These read the real files under `assets/data`. A catalogue that does not load is
+// not a runtime error the interface can recover from — it is a thinner app nobody
+// asked for — so it fails the build instead.
+// ---------------------------------------------------------------------------
+
+fn asset(name: &str) -> String {
+    let path = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../assets/data")
+        .join(name);
+    std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("{}: {error}", path.display()))
+}
+
+#[test]
+fn every_shipped_fixer_is_a_rule_the_app_can_apply_and_undo() {
+    let tweaks = Tweak::parse_library(&asset("fixers.json")).expect("fixers.json should parse");
+    assert!(
+        tweaks.len() >= 40,
+        "expected a real catalogue, found {}",
+        tweaks.len()
+    );
+    for tweak in &tweaks {
+        assert!(!tweak.name.is_empty());
+        assert!(!tweak.description.is_empty(), "{} has no description", tweak.name);
+        assert!(
+            !tweak.entries.is_empty(),
+            "{} writes nothing, so it can never do anything",
+            tweak.name
+        );
+        for entry in &tweak.entries {
+            assert!(!entry.key.is_empty(), "{} has an empty key", tweak.name);
+            // A rule with no default can be applied but never taken back, so the
+            // surface would offer a restore that silently skips it.
+            assert!(
+                entry.is_restorable(),
+                "{}: `{}` has no Windows default to restore",
+                tweak.name,
+                entry.display_name()
+            );
+        }
+    }
+}
+
+#[test]
+fn no_two_shipped_fixers_share_a_name() {
+    let tweaks = Tweak::parse_library(&asset("fixers.json")).unwrap();
+    let mut names: Vec<String> = tweaks
+        .iter()
+        .map(|tweak| tweak.name.to_ascii_lowercase())
+        .collect();
+    let total = names.len();
+    names.sort();
+    names.dedup();
+    assert_eq!(total, names.len(), "a duplicate name would shadow a rule");
+}
+
+#[test]
+fn every_shipped_fixer_declares_a_category() {
+    let tweaks = Tweak::parse_library(&asset("fixers.json")).unwrap();
+    for tweak in &tweaks {
+        assert_ne!(
+            tweak.category_label(),
+            "Other",
+            "{} falls into no category",
+            tweak.name
+        );
+    }
+}
+
+#[test]
+fn a_machine_needing_elevation_is_always_declared_as_such() {
+    let tweaks = Tweak::parse_library(&asset("fixers.json")).unwrap();
+    let inferring = tweaks
+        .iter()
+        .filter(|tweak| {
+            tweak.entries.iter().any(|entry| {
+                entry.hive.needs_admin()
+                    || entry.key.to_ascii_lowercase().contains("\\policies\\")
+            })
+        })
+        .count();
+    assert!(
+        inferring > 0,
+        "the catalogue should contain rules that need admin, or the inference is untested"
+    );
+    for tweak in &tweaks {
+        let should = tweak.entries.iter().any(|entry| {
+            entry.hive.needs_admin() || entry.key.to_ascii_lowercase().contains("\\policies\\")
+        });
+        assert_eq!(
+            tweak.requires_admin, should,
+            "{} disagrees with its own entries about elevation",
+            tweak.name
+        );
+    }
+}
+
+#[test]
+fn every_shipped_bloatware_entry_is_matchable() {
+    let catalog =
+        BloatCatalog::parse(&asset("bloatware.json")).expect("bloatware.json should parse");
+    assert!(
+        catalog.len() >= 30,
+        "expected a real catalogue, found {}",
+        catalog.len()
+    );
+    for app in catalog.apps() {
+        assert!(!app.package.is_empty(), "{} has no package name", app.name);
+        assert!(!app.description.is_empty(), "{} has no description", app.name);
+        assert!(
+            catalog.find(&app.package).is_some(),
+            "{} cannot be found by its own package name",
+            app.name
+        );
+    }
+}
+
+#[test]
+fn the_recommended_bloatware_set_is_a_real_subset() {
+    let catalog = BloatCatalog::parse(&asset("bloatware.json")).unwrap();
+    let recommended = catalog.recommended();
+    assert!(
+        !recommended.is_empty() && recommended.len() < catalog.len(),
+        "the recommended set should be a proper subset, found {} of {}",
+        recommended.len(),
+        catalog.len()
+    );
+}
+
+#[test]
+fn the_system_catalogue_covers_every_package_the_bloatware_one_recommends() {
+    // A recommended removal that Windows needs is the one combination this project
+    // must never ship: the fixer would tell someone to break their own machine.
+    let system = SystemCatalog::parse(&asset("system-apps.txt"));
+    let catalog = BloatCatalog::parse(&asset("bloatware.json")).unwrap();
+    for package in catalog.recommended() {
+        assert!(
+            !system.contains(&package),
+            "{package} is recommended for removal and marked system-critical"
+        );
+    }
+}
+
+// ---------------------------------------------------------------------------
+// 7. The extension template.
+//
+// `examples/extensions/` is documentation. A template that does not load teaches the
+// wrong shape, and one whose URLs point at nothing teaches a shape nobody can copy —
+// so it is checked the way the shipped catalogues are, and its scripts are handed to
+// PowerShell's parser like every other script in this repository.
+// ---------------------------------------------------------------------------
+
+#[test]
+fn the_extension_template_is_a_catalogue_that_loads() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../examples/extensions");
+    let text = std::fs::read_to_string(root.join("catalog.json"))
+        .unwrap_or_else(|error| panic!("the example catalogue is missing: {error}"));
+    let entries = Extension::parse_catalog(&text).expect("the example catalogue should parse");
+
+    for name in ["Export network configuration", "Export recent security events"] {
+        assert!(
+            entries.iter().any(|entry| entry.name == name),
+            "{name} is in the template but the loader drops it"
+        );
+    }
+    assert!(
+        entries.iter().any(|entry| entry.requires_admin),
+        "the template should show the admin flag, or nobody learns it exists"
+    );
+
+    for entry in &entries {
+        assert!(entry.is_fetchable(), "{} is not an http(s) URL", entry.name);
+        assert!(
+            !entry.description.is_empty(),
+            "{} has no description to show before a run",
+            entry.name
+        );
+        // The URL's tail is the installed file name, which makes the template's URLs
+        // a claim about this folder. Assert the claim.
+        let name = entry
+            .file_name_of()
+            .unwrap_or_else(|| panic!("{} does not name a .ps1 file", entry.name));
+        let file = root.join(&name);
+        assert!(
+            file.is_file(),
+            "{} is listed as {name}, which is not in the template folder",
+            entry.name
+        );
+        let Some(errors) = parse_errors(&file) else {
+            eprintln!("skipping: PowerShell is not available on this machine");
+            return;
+        };
+        assert!(
+            errors.is_empty(),
+            "{} does not parse: {errors:#?}",
+            file.display()
+        );
+    }
 }
