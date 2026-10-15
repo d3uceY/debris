@@ -11,11 +11,12 @@
 
 mod assets;
 mod bundle;
+mod paths;
 mod root;
 
 use crate::assets::Assets;
 use crate::root::Root;
-use debris_ui::prelude::*;
+use debris_ui::theme::Theme;
 // `AppContext` — which provides `cx.new(..)` and `cx.set_global(..)` — arrives with
 // GPUI's prelude.
 use gpui::{App, Bounds, WindowBounds, WindowOptions, prelude::*, px, size};

@@ -17,6 +17,7 @@ debris-ui.workspace = true
 gpui.workspace = true
 gpui_platform.workspace = true
 anyhow.workspace = true
+serde_json.workspace = true
 
 [build-dependencies]
 # Stamps the logo into the exe as its icon resource; see build.rs.

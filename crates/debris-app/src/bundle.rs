@@ -11,7 +11,7 @@
 //! into the local app data directory, once per build; see [`script_dir`].
 
 use debris_core::script::library;
-use debris_core::{Preset, Result, ScriptMeta, SystemCatalog};
+use debris_core::{BloatCatalog, Preset, Result, ScriptMeta, SystemCatalog, Tweak};
 use gpui::SharedString;
 use std::path::{Path, PathBuf};
 
@@ -70,6 +70,39 @@ pub fn presets() -> Vec<Preset> {
     presets
 }
 
+/// The fixers, as shipped. Returns nothing rather than failing when the catalogue is
+/// missing or malformed: the app can inventory packages perfectly well without it, and
+/// refusing to start over a data file would be worse than a thinner surface.
+pub fn fixers() -> Vec<Tweak> {
+    let Some(text) = text("data/fixers.json") else {
+        eprintln!("debris: no fixer catalogue in this build");
+        return Vec::new();
+    };
+    match Tweak::parse_library(text) {
+        Ok(tweaks) => tweaks,
+        Err(error) => {
+            eprintln!("debris: {error}");
+            Vec::new()
+        }
+    }
+}
+
+/// The bloatware catalogue, for naming and describing what the inventory found.
+///
+/// Empty is a working state: nothing is described, and nothing else changes.
+pub fn bloatware() -> BloatCatalog {
+    match text("data/bloatware.json") {
+        Some(text) => match BloatCatalog::parse(text) {
+            Ok(catalog) => catalog,
+            Err(error) => {
+                eprintln!("debris: {error}");
+                BloatCatalog::default()
+            }
+        },
+        None => BloatCatalog::default(),
+    }
+}
+
 /// The script library, unpacked and parsed.
 pub fn scripts() -> Result<Vec<ScriptMeta>> {
     library(script_dir())
@@ -102,22 +135,18 @@ pub fn script_dir() -> PathBuf {
 
 /// The identity of the embedded library: the hash of every script's path and bytes.
 fn bundle_id() -> String {
-    let mut hash: u64 = 0xcbf2_9ce4_8422_2325;
+    let mut bytes = Vec::new();
     for file in SCRIPTS {
-        for byte in file.path.bytes().chain(file.bytes.iter().copied()) {
-            hash ^= u64::from(byte);
-            hash = hash.wrapping_mul(0x0000_0100_0000_01b3);
-        }
+        bytes.extend_from_slice(file.path.as_bytes());
+        bytes.extend_from_slice(file.bytes);
     }
-    format!("{hash:016x}")
+    format!("{:016x}", crate::paths::fnv1a(&bytes))
 }
 
-/// `%LOCALAPPDATA%\debris`, or the temp directory if the profile has no local app data.
+/// The local app data directory. Derived content lives here rather than in the
+/// roaming profile; see [`crate::paths`].
 fn data_root() -> PathBuf {
-    std::env::var_os("LOCALAPPDATA")
-        .map(PathBuf::from)
-        .unwrap_or_else(std::env::temp_dir)
-        .join("debris")
+    crate::paths::local_root()
 }
 
 fn unpack(staging: &Path) -> std::io::Result<()> {

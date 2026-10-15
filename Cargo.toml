@@ -17,6 +17,12 @@ gpui_platform = { git = "https://github.com/zed-industries/zed" }
 # GPUI's `AssetSource::load` returns `anyhow::Result`, so the app cannot avoid it.
 anyhow = "1"
 
+# Every piece of data this app reads is JSON: the shipped catalogues, the settings,
+# the custom tweaks, and the extension catalogue. Hand-rolling a parser for any of
+# them would be more code and less correct.
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
 # `debris-app`'s build script compiles the exe icon into the binary on Windows.
 # Already in the graph via GPUI's own `windows-manifest` feature.
 embed-resource = "3.0.12"
