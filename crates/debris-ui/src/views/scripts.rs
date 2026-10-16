@@ -132,7 +132,7 @@ fn body<T: DebrisApp>(
             theme,
             Icon::Terminal,
             "No scripts found",
-            "Script library is empty.",
+            "This build ships no script library.",
             None,
         );
     }

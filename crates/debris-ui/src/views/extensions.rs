@@ -162,7 +162,7 @@ fn toolbar<T: DebrisApp>(
         })
         .child(chip(
             theme,
-            format!("{} catalogues", snapshot.extension_sources.len()),
+            shared::count(snapshot.extension_sources.len(), "catalogue", "catalogues"),
             Tone::Quiet,
         ))
         .into_any_element()
@@ -179,7 +179,7 @@ fn body<T: DebrisApp>(
             theme,
             Icon::Puzzle,
             "No catalogues yet",
-            "Add a link to a JSON catalogue. Each entry needs a name, a description and a .ps1 address.",
+            "Add a link to a JSON catalogue.",
             None,
         );
     }
@@ -239,7 +239,7 @@ fn body<T: DebrisApp>(
                 .text_size(px(text::SMALL))
                 .text_color(theme.muted_foreground)
                 .child(if snapshot.extensions.is_empty() {
-                    "Nothing has been fetched yet. Press Refresh all, or add another catalogue."
+                    "Nothing fetched yet. Press Refresh all."
                 } else {
                     "No entry matches that filter."
                 }),

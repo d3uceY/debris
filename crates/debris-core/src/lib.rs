@@ -22,7 +22,7 @@ pub mod tweak;
 pub use bloat::{BloatApp, BloatCatalog};
 pub use catalog::SystemCatalog;
 pub use error::{DebrisError, Result};
-pub use extension::{Extension, is_fetchable};
+pub use extension::{Extension, is_fetchable, raw_url};
 pub use model::AppxPackage;
 pub use plan::{Caveat, RemovalPlan, RemovalStep};
 pub use preset::Preset;

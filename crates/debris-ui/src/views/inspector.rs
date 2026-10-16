@@ -256,7 +256,7 @@ fn fixer_detail(theme: &Theme) -> AnyElement {
                 ),
                 sub_prose(
                     theme,
-                    "That Windows default is the field that makes the way back possible. A rule without one cannot be restored.",
+                    "That Windows default is what makes the way back possible. A rule without one cannot be restored.",
                 ),
             ],
         ))
@@ -384,7 +384,7 @@ fn preset_detail(theme: &Theme) -> AnyElement {
         "WHAT A PRESET DOES",
         vec![prose(
             theme,
-            "Loads a list of recommended package unintalls",
+            "Loads a list of recommended package uninstalls.",
         )],
     );
 

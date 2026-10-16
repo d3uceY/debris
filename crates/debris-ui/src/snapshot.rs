@@ -76,7 +76,7 @@ impl Screen {
             Screen::Fixers => "Filter fixers…",
             Screen::Scripts => "Filter the library…",
             Screen::Extensions => "Filter extensions…",
-            Screen::Presets => "Find a preset…",
+            Screen::Presets => "Filter presets…",
         }
     }
 }

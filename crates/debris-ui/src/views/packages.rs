@@ -137,7 +137,7 @@ fn inventory<T: DebrisApp>(
             theme,
             Icon::Package,
             "No inventory yet",
-            "Rescan asks Windows what is installed for this user. Nothing is read until you do.",
+            "Rescan asks Windows what is installed for this user.",
             Some(
                 button(theme, "empty-rescan")
                     .label("Rescan")
@@ -153,7 +153,7 @@ fn inventory<T: DebrisApp>(
             theme,
             Icon::Search,
             "Nothing matches that filter",
-            "Clear the search field to see the whole inventory again.",
+            "Clear the search field to see the whole inventory.",
             Some(
                 button(theme, "empty-clear-filter")
                     .label("Clear the filter")
@@ -169,7 +169,7 @@ fn inventory<T: DebrisApp>(
             theme,
             Icon::ArrowRight,
             "Everything is in the queue",
-            "Every package this user can uninstall is on the left. Nothing has been removed yet.",
+            "Nothing has been removed yet.",
             None,
         )
     } else {

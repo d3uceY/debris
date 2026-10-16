@@ -229,18 +229,9 @@ pub fn package_table<T: DebrisApp>(
         .into_any_element()
 }
 
-/// `1 package` / `3 packages`.
-///
-/// An app that writes "1 packages" is an app nobody read twice, and this interface
-/// counts things on almost every row. One helper, used everywhere a number meets a
-/// noun.
-pub fn count(n: usize, singular: &str, plural: &str) -> String {
-    if n == 1 {
-        format!("{n} {singular}")
-    } else {
-        format!("{n} {plural}")
-    }
-}
+// Declared in `components` so a component row can pluralise too; re-exported here
+// because every surface already reaches for it through this module.
+pub use crate::components::count;
 
 /// A wrapped monospace block for a long identifier that has no spaces to break on.
 /// The identifier this tool displays — an Appx package family name — is 60+

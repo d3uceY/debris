@@ -6,36 +6,35 @@
 
 A Windows debloat tool in Rust. It does three things:
 
-- **Packages** — inventories the Appx/UWP packages installed for the current user, lets
-  you stage a set for removal, and removes them.
-- **Fixers** — a catalogue of registry rules, each naming the value it wants *and* the
-  value Windows ships with. Tick the ones you want, check them against the registry,
-  run them, and restore any of them to the Windows default.
+- **Packages** — the Appx/UWP packages installed for this user, staged for removal.
+- **Fixers** — registry rules, each naming the value it wants *and* the value Windows
+  ships with. Tick what you want, check it against the registry, run it, and restore it
+  to the Windows default.
 - **Scripts** — an audited PowerShell library, plus third-party scripts from JSON
   catalogues you add by URL.
 
 ## Screenshots
 
-Packages are staged in the left column: a row leaves the table and lands in the queue,
-and nothing runs until the button at the bottom is pressed.
+Staging moves a package out of the table and into the queue; nothing runs until you
+press Run.
 
 ![The package inventory, with three packages staged for removal in the left column](docs/packages.png)
 
-The fixer catalogue. Each rule shows whether the machine already satisfies it and what
-it holds right now. Nothing is written until the ticked set is confirmed.
+Each rule shows whether the machine already satisfies it, and what it holds right now.
+Nothing is written until the ticked set is confirmed.
 
 ![The registry fixers, grouped by category, with state chips and the run footer](docs/fixers.png)
 
-The script library. Every script declares its own risk and whether it needs
-administrator rights, and the ticked set runs from one footer button.
+Every script declares its own risk and whether it needs administrator rights; the
+ticked set runs from one footer button.
 
 ![The script library, showing each script's risk and admin requirement](docs/scripts.png)
 
 ## Status
 
-Early. Everything described above is implemented and tested. Package removal executes
-the real `Remove-AppxPackage` command, and a run of fixers writes the registry; both ask
-for confirmation first. No test in the suite executes a script or writes the registry.
+Early. Everything above is implemented and tested. Package removal runs the real
+`Remove-AppxPackage` command, and a run of fixers writes the registry; both ask for
+confirmation first.
 
 ## Where your data goes
 
@@ -163,9 +162,9 @@ docs/            the screenshots above
 examples/        a catalogue template, with two working extension scripts
 ```
 
-There is no `privacy/` shelf. Everything that used to live there is a registry rule,
-so it is a fixer: the catalogue can describe it, check it, apply it and undo it, which
-a script could not.
+There is no `privacy/` shelf: everything that used to live there is a registry rule, so
+the catalogue can describe it, check it, apply it and undo it — which a script could
+not.
 
 Both `assets/` and `scripts/` are the source of truth, and both are **embedded into the
 binary at build time** — a released exe needs nothing beside it. Only the files the app

@@ -14,7 +14,9 @@ use debris_core::{DebrisError, Result, is_fetchable};
 use std::path::Path;
 
 pub fn fetch_invocation(url: &str) -> Invocation {
-    let escaped = url.trim().replace('\'', "''");
+    // A GitHub page URL is not a file URL — this is the one place every fetch passes
+    // through, so the rewrite belongs here rather than at each caller.
+    let escaped = debris_core::raw_url(url).replace('\'', "''");
     Invocation::powershell(&format!(
         "[Net.ServicePointManager]::SecurityProtocol=[Net.SecurityProtocolType]::Tls12;\
 $r=Invoke-WebRequest -UseBasicParsing -TimeoutSec 30 -Uri '{escaped}';\
@@ -123,6 +125,20 @@ mod tests {
         let script = invocation.args.last().unwrap();
         assert!(script.contains("''"));
         assert!(!script.contains("a'; Remove-Item"));
+    }
+
+    #[test]
+    fn a_github_page_url_is_requested_as_the_address_that_serves_the_file() {
+        let invocation = fetch_invocation(
+            "https://github.com/d3uceY/debris/blob/main/examples/extensions/catalog.json",
+        );
+        let script = invocation.args.last().unwrap();
+        assert!(script.contains(
+            "-Uri 'https://raw.githubusercontent.com/d3uceY/debris/main/examples/extensions/catalog.json'"
+        ));
+        // The page URL answers a non-browser client with a 503, so it must not be the
+        // one on the wire.
+        assert!(!script.contains("github.com/d3uceY/debris/blob"));
     }
 
     #[test]

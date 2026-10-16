@@ -110,7 +110,7 @@ fn body<T: DebrisApp>(
             theme,
             Icon::Search,
             "Nothing matches that filter",
-            "Clear the search field to see every preset again.",
+            "Clear the search field to see every preset.",
             None,
         );
     }

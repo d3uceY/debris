@@ -331,7 +331,7 @@ fn title_bar<T: DebrisApp>(
                         .small()
                         .icon(Icon::PanelLeft)
                         .icon_only()
-                        .tooltip("Show or hide the removal queue")
+                        .tooltip("Toggle the removal queue")
                         .build(cx.listener(|this: &mut T, _event: &ClickEvent, _window, cx| {
                             this.toggle_sidebar(cx)
                         })),
@@ -342,7 +342,7 @@ fn title_bar<T: DebrisApp>(
                         .small()
                         .icon(Icon::PanelRight)
                         .icon_only()
-                        .tooltip("Show or hide the inspector")
+                        .tooltip("Toggle the inspector")
                         .build(cx.listener(|this: &mut T, _event: &ClickEvent, _window, cx| {
                             this.toggle_inspector(cx)
                         })),
@@ -416,7 +416,7 @@ fn rail<T: DebrisApp>(theme: &Theme, snapshot: &Snapshot, cx: &mut Context<T>) -
                 theme,
                 "rail-inspector",
                 Icon::PanelRight,
-                "Show or hide the inspector",
+                "Toggle the inspector",
                 snapshot.inspector_open,
                 cx.listener(|this: &mut T, _event: &ClickEvent, _window, cx| {
                     this.toggle_inspector(cx)

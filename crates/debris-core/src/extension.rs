@@ -104,6 +104,45 @@ pub fn is_fetchable(url: &str) -> bool {
     trimmed.starts_with("https://") || trimmed.starts_with("http://")
 }
 
+/// The address that serves the file, given the address a browser showed for it.
+///
+/// On GitHub those are two different URLs, and the one people copy is the page:
+/// `github.com/o/r/blob/main/catalog.json` serves the viewer's HTML — and answers a
+/// non-browser client with a bare 503 — while `raw.githubusercontent.com/o/r/main/…`
+/// serves the bytes. Rewriting the page URL is what makes the address bar a valid way
+/// to add a catalogue. Anything that is not a GitHub page URL comes back untouched.
+pub fn raw_url(url: &str) -> String {
+    const PAGES: [&str; 4] = [
+        "https://github.com/",
+        "http://github.com/",
+        "https://www.github.com/",
+        "http://www.github.com/",
+    ];
+
+    let trimmed = url.trim();
+    let Some(rest) = PAGES.iter().find_map(|page| trimmed.strip_prefix(page)) else {
+        return trimmed.to_string();
+    };
+    // `<owner>/<repo>/<blob|raw>/<ref>/<path>`; the ref is handed through whole so a
+    // branch with a slash in it is not mangled.
+    let mut parts = rest.splitn(4, '/');
+    let (Some(owner), Some(repo), Some(kind), Some(tail)) =
+        (parts.next(), parts.next(), parts.next(), parts.next())
+    else {
+        return trimmed.to_string();
+    };
+    // A `#L12` from a line-numbered view is not part of the file's address.
+    let tail = tail.split(['?', '#']).next().unwrap_or(tail);
+    if owner.is_empty()
+        || repo.is_empty()
+        || !matches!(kind, "blob" | "raw")
+        || !tail.contains('/')
+    {
+        return trimmed.to_string();
+    }
+    format!("https://raw.githubusercontent.com/{owner}/{repo}/{tail}")
+}
+
 /// Decodes `%20` and friends, because script URLs are usually full of them.
 fn percent_decode(text: &str) -> String {
     let bytes = text.as_bytes();
@@ -177,6 +216,42 @@ mod tests {
         assert_eq!(Extension::file_name("https://x/..%5Cevil.ps1"), None);
         assert_eq!(Extension::file_name("https://x/.hidden.ps1"), None);
         assert_eq!(Extension::file_name("https://x/a.ps1.ps1"), Some("a.ps1.ps1".into()));
+    }
+
+    #[test]
+    fn a_github_page_url_becomes_the_address_that_serves_the_file() {
+        assert_eq!(
+            raw_url("https://github.com/d3uceY/debris/blob/main/examples/extensions/catalog.json"),
+            "https://raw.githubusercontent.com/d3uceY/debris/main/examples/extensions/catalog.json"
+        );
+        // The `raw` spelling, a query string, and a line-numbered link all land on the
+        // same address; the ref is passed through whole, slashes and all.
+        assert_eq!(
+            raw_url("https://github.com/o/r/raw/v2/x.json?token=1"),
+            "https://raw.githubusercontent.com/o/r/v2/x.json"
+        );
+        assert_eq!(
+            raw_url("https://github.com/o/r/blob/feat/x/y.json#L12"),
+            "https://raw.githubusercontent.com/o/r/feat/x/y.json"
+        );
+    }
+
+    #[test]
+    fn a_url_that_is_not_a_github_file_page_is_left_alone() {
+        for url in [
+            // A directory listing is not a file.
+            "https://github.com/o/r/tree/main",
+            // No path after the ref.
+            "https://github.com/o/r/blob/main",
+            // Not GitHub, and already raw.
+            "https://raw.githubusercontent.com/o/r/main/x.json",
+            "https://example.com/x.json",
+            "file:///C:/x.json",
+        ] {
+            assert_eq!(raw_url(url), url);
+        }
+        // Trailing space is the clipboard's, not the address's.
+        assert_eq!(raw_url("  https://example.com/x.json "), "https://example.com/x.json");
     }
 
     #[test]

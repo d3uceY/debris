@@ -22,7 +22,7 @@
 //! A row declares its own rule (`border_b`) rather than sitting inside a bordered
 //! container. A list is a stack of hairlines, not a card with padding.
 
-use crate::components::{Tone, chip, chip_with};
+use crate::components::{Tone, chip, chip_with, count};
 use crate::icons::{Icon, icon};
 use crate::theme::{Theme, metrics, space, text, veil};
 use debris_core::{
@@ -770,7 +770,7 @@ pub fn preset_row(theme: &Theme, preset: &Preset, actions: AnyElement) -> AnyEle
                         .font_family(theme.font_mono.clone())
                         .text_size(px(text::LABEL))
                         .text_color(theme.muted_foreground)
-                        .child(format!("{} packages", preset.len())),
+                        .child(count(preset.len(), "package", "packages")),
                 ),
         )
         .child(actions)

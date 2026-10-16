@@ -51,10 +51,7 @@ pub fn ledger<T: DebrisApp>(
     );
 
     let body: AnyElement = if snapshot.staged.is_empty() {
-        pane_hint(
-            theme,
-            "Nothing staged. Click a package to move it into this column.",
-        )
+        pane_hint(theme, "Click a package to add it to the queue.")
     } else {
         let mut list = column_body().id("queue-scroll").overflow_scroll();
         for (index, package) in snapshot.staged.iter().enumerate() {

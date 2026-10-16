@@ -65,6 +65,23 @@ pub fn divider(theme: &Theme) -> impl IntoElement {
 }
 
 // ---------------------------------------------------------------------------
+// Text
+// ---------------------------------------------------------------------------
+
+/// `1 package` / `3 packages`.
+///
+/// An app that writes "1 packages" is an app nobody read twice, and this interface
+/// counts things on almost every row. One helper, used everywhere a number meets a
+/// noun.
+pub fn count(n: usize, singular: &str, plural: &str) -> String {
+    if n == 1 {
+        format!("{n} {singular}")
+    } else {
+        format!("{n} {plural}")
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Type
 // ---------------------------------------------------------------------------
 
