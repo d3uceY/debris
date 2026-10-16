@@ -173,6 +173,9 @@ pub struct Snapshot {
     pub screen: Screen,
 
     pub query: String,
+    /// Ctrl+A in the search field: the whole value is selected, so the next key
+    /// replaces it. Every edit clears it, which is why nothing else has to know.
+    pub query_selected: bool,
     pub show_system: bool,
 
     /// The filtered inventory, memoized. `Staging::visible()` indexes this exactly.
@@ -212,6 +215,8 @@ pub struct Snapshot {
     pub installed_extensions: Arc<HashMap<String, String>>,
     /// What the user is typing into the catalogue field, before it is added.
     pub source_input: String,
+    /// Ctrl+A in that field.
+    pub source_selected: bool,
 
     /// The keyboard cursor into `inventory`. Operate surfaces are keyboard-first.
     pub cursor: usize,

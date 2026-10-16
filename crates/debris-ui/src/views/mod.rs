@@ -48,7 +48,7 @@ pub use shared::package_table;
 
 use crate::components::button::button;
 use crate::components::icon_rail::{rail_item, rail_shell, rail_spacer};
-use crate::components::text_field::text_field;
+use crate::components::text_field::{Text, text_field};
 use crate::components::{divider, status_bar};
 use crate::icons::Icon;
 use crate::snapshot::{Screen, Snapshot};
@@ -75,6 +75,8 @@ pub trait DebrisApp: Sized + 'static {
 
     fn navigate(&mut self, screen: Screen, cx: &mut Context<Self>);
     fn set_query(&mut self, query: String, cx: &mut Context<Self>);
+    /// Ctrl+A in the search field: select the whole value, so the next key replaces it.
+    fn select_query(&mut self, cx: &mut Context<Self>);
     fn set_show_system(&mut self, show: bool, cx: &mut Context<Self>);
     fn stage(&mut self, name: &str, cx: &mut Context<Self>);
     fn unstage(&mut self, name: &str, cx: &mut Context<Self>);
@@ -106,6 +108,8 @@ pub trait DebrisApp: Sized + 'static {
     // — the extension catalogues —
     /// The URL being typed into the catalogue field.
     fn set_source_input(&mut self, value: String, cx: &mut Context<Self>);
+    /// Ctrl+A in the catalogue field.
+    fn select_source(&mut self, cx: &mut Context<Self>);
     /// Add the typed URL as a catalogue and fetch it.
     fn add_source(&mut self, cx: &mut Context<Self>);
     /// Forget a catalogue, and everything it listed.
@@ -287,7 +291,10 @@ fn title_bar<T: DebrisApp>(
                 .child(text_field(
                     theme,
                     "global-filter",
-                    &snapshot.query,
+                    Text {
+                        value: &snapshot.query,
+                        selected: snapshot.query_selected,
+                    },
                     snapshot.screen.hint(),
                     search_focus,
                     shared::search_key_handler(cx),

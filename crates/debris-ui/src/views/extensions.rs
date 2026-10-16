@@ -16,7 +16,7 @@
 use crate::components::button::{Variant, button};
 use crate::components::panel::{panel_body, panel_header};
 use crate::components::rows;
-use crate::components::text_field::text_field;
+use crate::components::text_field::{Text, text_field};
 use crate::components::{Tone, chip, empty_state, section_eyebrow};
 use crate::icons::Icon;
 use crate::snapshot::{CatalogEntry, Screen, Snapshot};
@@ -122,7 +122,10 @@ fn toolbar<T: DebrisApp>(
                 .child(text_field(
                     theme,
                     "extension-source",
-                    &snapshot.source_input,
+                    Text {
+                        value: &snapshot.source_input,
+                        selected: snapshot.source_selected,
+                    },
                     PLACEHOLDER,
                     source_focus,
                     shared::source_key_handler(cx),

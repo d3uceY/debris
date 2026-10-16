@@ -15,10 +15,21 @@ use gpui::{
 };
 use std::time::Duration;
 
+/// What is in a field: its text, and whether Ctrl+A has the whole of it selected.
+///
+/// They travel together because this field has no cursor to move, so a value is either
+/// wholly selected or not selected at all — and because it keeps the builder below
+/// clippy's argument limit without an `allow`.
+#[derive(Clone, Copy)]
+pub struct Text<'a> {
+    pub value: &'a str,
+    pub selected: bool,
+}
+
 pub fn text_field<F, G>(
     theme: &Theme,
     id: &str,
-    value: &str,
+    text: Text<'_>,
     placeholder: &str,
     focus: &FocusHandle,
     on_key: F,
@@ -28,7 +39,7 @@ where
     F: Fn(&KeyDownEvent, &mut Window, &mut App) + 'static,
     G: Fn(&ClickEvent, &mut Window, &mut App) + 'static,
 {
-    let empty = value.is_empty();
+    let empty = text.value.is_empty();
     let show_clear = !empty;
     let content_color = if empty {
         theme.muted_foreground
@@ -42,6 +53,10 @@ where
     // Hover closures must be `'static`, so every colour they need is copied out of
     // the theme before the closure is built.
     let clear_hover = theme.band(crate::theme::veil::BAND);
+    // Ctrl+A. `accent` is this design's selected surface — the fill the keyboard cursor
+    // row and every hovered control already wear — so a selected value borrows it.
+    // (`band()` would have been invisible: `muted` is #F5F5F5 on white.)
+    let selection = theme.accent;
     let font = theme.font_mono.clone();
     let handle = focus.clone();
 
@@ -88,10 +103,13 @@ where
                     div()
                         .min_w_0()
                         .truncate()
+                        .when(text.selected && !empty, |text| {
+                            text.bg(selection).rounded(px(2.0))
+                        })
                         .child(if empty {
                             placeholder.to_string()
                         } else {
-                            value.to_string()
+                            text.value.to_string()
                         }),
                 )
                 .when(!empty, |row| row.child(caret(theme, focus, id))),

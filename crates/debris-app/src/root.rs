@@ -782,9 +782,15 @@ impl DebrisApp for Root {
     }
 
     fn set_query(&mut self, query: String, cx: &mut Context<Self>) {
+        self.snapshot.query_selected = false;
         self.staging.set_query(query);
         self.snapshot.cursor = 0;
         self.sync(cx);
+    }
+
+    fn select_query(&mut self, cx: &mut Context<Self>) {
+        self.snapshot.query_selected = true;
+        cx.notify();
     }
 
     fn set_show_system(&mut self, show: bool, cx: &mut Context<Self>) {
@@ -932,6 +938,12 @@ impl DebrisApp for Root {
 
     fn set_source_input(&mut self, value: String, cx: &mut Context<Self>) {
         self.snapshot.source_input = value;
+        self.snapshot.source_selected = false;
+        cx.notify();
+    }
+
+    fn select_source(&mut self, cx: &mut Context<Self>) {
+        self.snapshot.source_selected = true;
         cx.notify();
     }
 
@@ -947,6 +959,7 @@ impl DebrisApp for Root {
             return;
         }
         self.snapshot.source_input.clear();
+        self.snapshot.source_selected = false;
         if !self.settings.add_source(&url) {
             self.snapshot.status = Status::Info(format!("{url} is already a catalogue."));
             cx.notify();
